@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/list_item_tide_height"
+    android:layout_margin="@dimen/padding_half"
+    android:orientation="vertical">
+
+    <View
+        android:id="@+id/divider_list_item"
+        style="@style/Divider"
+        android:paddingBottom="@dimen/padding_half"
+        android:layout_marginLeft="@dimen/padding"
+        android:layout_marginRight="@dimen/padding" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="@dimen/padding_half"
+        android:paddingStart="@dimen/padding_double"
+        android:paddingEnd="@dimen/padding_double"
+        android:gravity="center_horizontal"
+        android:weightSum="7">
+
+        <TextView
+            android:id="@+id/tide_item_flag"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:gravity="start"
+            android:contentDescription="@string/content_desc_tide_flag"
+            android:fontFamily="sans-serif-condensed"
+            android:textAllCaps="true"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textSize="@dimen/list_item_text_size"
+            android:textColor="@color/ocean_blue"
+            tools:text="HIGH TIDE" />
+
+        <TextView
+            android:id="@+id/tide_item_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:contentDescription="@string/content_desc_tide_time"
+            android:textSize="@dimen/list_item_text_size"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+            tools:text="06:25" />
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <ImageView xmlns:tools="http://schemas.android.com/tools"
+                android:id="@+id/tide_item_flag_img"
+                android:layout_width="@dimen/list_item_img_size"
+                android:layout_height="@dimen/list_item_img_size"
+                android:layout_alignParentEnd="true"
+                android:contentDescription="@string/content_desc_tide_img"
+                tools:src="@drawable/high_tide" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tide_item_value"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:contentDescription="@string/content_desc_tide_level"
+            android:gravity="end"
+            android:textSize="@dimen/list_item_text_size"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+            tools:text="0.67 cm" />
+
+    </LinearLayout>
+</LinearLayout>

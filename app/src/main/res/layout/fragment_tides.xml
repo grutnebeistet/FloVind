@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tides_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/transparent">
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardview_container"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/tide_table_height"
+        android:layout_alignParentBottom="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="32dp"
+        app:cardElevation="0.7dp"
+        app:cardMaxElevation="1dp"
+        app:cardPreventCornerOverlap="true"
+        app:cardUseCompatPadding="true"
+        app:contentPaddingBottom="0dp"
+        card_view:cardCornerRadius="4dp">
+
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <include
+                android:id="@+id/place_nav"
+                layout="@layout/tides_place_navigation" />
+
+            <TextView
+                android:id="@+id/forecast_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/content_desc_date"
+                android:gravity="center_horizontal"
+                android:textSize="@dimen/list_item_text_size"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/place_nav"
+                tools:text="Monday, Oct 23rd" />
+
+<!--            <include
+                android:id="@+id/sunrise_set"
+                layout="@layout/rise_set"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintRight_toLeftOf="@id/forecast_date"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/tides_rv_frame"/>
+
+            <include
+                android:id="@+id/moonrise_set"
+                layout="@layout/moon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toRightOf="@id/forecast_date"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/tides_rv_frame"/>-->
+
+            <android.support.constraint.Guideline
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                app:layout_constraintGuide_percent="0.16"
+                app:layout_constraintTop_toBottomOf="@id/forecast_date" />
+
+
+            <FrameLayout
+                android:id="@+id/tides_rv_frame"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:paddingLeft="@dimen/padding_half"
+                android:paddingRight="@dimen/padding_half"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/forecast_date">
+
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/tides_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tides_error_tv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:contentDescription="@string/content_desc_error"
+                android:gravity="center"
+                android:padding="16dp"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textStyle="italic"
+                tools:text="Too far away dammitdsdf sdfs dfsdfds sd dfsdfdsf" />
+
+            <View
+                android:id="@+id/divider_list_item"
+                style="@style/Divider"
+                android:layout_marginBottom="4dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tides_rv_frame" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="@dimen/padding"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tides_rv_frame">
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/winds_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:focusable="false"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/padding"
+                    android:paddingRight="@dimen/padding"
+                    android:paddingBottom="@dimen/padding"/>
+            </FrameLayout>
+        </android.support.constraint.ConstraintLayout>
+    </android.support.v7.widget.CardView>
+
+<!--    <fragment xmlns:map="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/map"
+        class="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        map:cameraTilt="30"
+        map:uiCompass="true" />-->
+
+</RelativeLayout>
