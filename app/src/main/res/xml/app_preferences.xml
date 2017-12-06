@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:key="pref_category"
+        android:title="@string/map_category_label">
+        <ListPreference
+            android:defaultValue="@string/map_type_def_value"
+            android:entries="@array/listArrayMapsTypesLabels"
+            android:entryValues="@array/listMapTypesValues"
+            android:key="@string/pref_map_type_key"
+            android:summary="%s"
+            android:title="@string/map_type_label" />
+
+        <ListPreference
+            android:defaultValue="@string/style_label_default"
+            android:entries="@array/listArrayMapsLabels"
+            android:entryValues="@array/listValues"
+            android:key="@string/map_pref_key"
+            android:summary="%s"
+            android:enabled="false"
+            android:title="@string/map_style_label" />
+<!--
+        <ListPreference
+            android:defaultValue="@string/map_zoom_def_value"
+            android:entries="@array/listArrayMapsLabels"
+            android:entryValues="@array/listValues"
+            android:key="@string/map_pref_key"
+            android:summary="%s"
+            android:title="Map Style" />
+-->
+
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="pref_category"
+        android:title="@string/notification_label">
+        <CheckBoxPreference
+            android:defaultValue="@bool/show_notifications_by_default"
+            android:key="@string/pref_enable_notifications_key"
+            android:summaryOff="@string/pref_enable_notifications_false"
+            android:summaryOn="@string/pref_enable_notifications_true"
+            android:title="@string/pref_enable_notifications_label" />
+
+        <ListPreference
+            android:defaultValue="@string/notify_hours_default"
+            android:entries="@array/notifyHoursLabels"
+            android:entryValues="@array/notifyHoursValues"
+            android:key="@string/notify_hours_key"
+            android:summary="%s"
+            android:dependency="@string/pref_enable_notifications_key"
+            android:title="@string/offset_label" />
+    </PreferenceCategory>
+   <PreferenceCategory android:title="@string/pref_header_about">
+        <Preference
+            android:summary="@string/app_version"
+            android:title="@string/title_version" />
+<!--        <Preference
+            android:summary="@string/website"
+            android:title="Website">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/website" />
+        </Preference>-->
+    </PreferenceCategory>
+</PreferenceScreen>

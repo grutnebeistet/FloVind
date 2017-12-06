@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.FragmentTransaction
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Location
 import android.net.Uri
 import android.support.v7.app.AppCompatActivity
@@ -21,6 +22,7 @@ import android.view.View
 import timber.log.Timber
 import android.location.LocationManager
 import android.support.design.widget.Snackbar
+import android.support.v4.app.FragmentManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.GoogleMap
@@ -30,7 +32,7 @@ import com.google.android.gms.tasks.Task
 import com.solutions.grutne.flovind.sync.SyncUtils
 
 
-internal class MainActivity : AppCompatActivity(), GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMarkerClickListener, OnMapReadyCallback, {
+internal class MainActivity : AppCompatActivity() {
 
     private val TAB_POS = "tab_post"
 
@@ -46,12 +48,18 @@ internal class MainActivity : AppCompatActivity(), GoogleMap.OnMyLocationButtonC
 
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         setContentView(R.layout.activity_main)
         Timber.plant(Timber.DebugTree())
+        val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
+       // toolbar.setBackgroundColor(Color.BLUE)
+        setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayShowTitleEnabled(false)
+
         if (!checkPermissions()) {
             requestPermissions()
         } else
@@ -91,7 +99,11 @@ internal class MainActivity : AppCompatActivity(), GoogleMap.OnMyLocationButtonC
 
                         SyncUtils.initialize(this@MainActivity)
 
-                        FragmentTransaction.
+                        // for now, if location then start tidesfragment
+                        val tFrag = TidesFragment.newInstance(task.result)
+                        val transaction = supportFragmentManager.beginTransaction()
+                        transaction.add(R.id.frag_container, tFrag)
+                        transaction.commit()
 
                     } else {
                         showSnackbar(getString(R.string.no_location_detected))
@@ -146,20 +158,11 @@ internal class MainActivity : AppCompatActivity(), GoogleMap.OnMyLocationButtonC
             startLocationPermissionRequest()
         }
     }
-/*
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        */
-/* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater *//*
-
         val inflater = menuInflater
-        */
-/* Use the inflater's inflate method to inflate our menu layout to this menu *//*
-
         inflater.inflate(R.menu.menu_main, menu)
-        */
-/* Return true so that the menu is displayed in the Toolbar *//*
-
         return true
     }
 
@@ -174,7 +177,6 @@ internal class MainActivity : AppCompatActivity(), GoogleMap.OnMyLocationButtonC
 
         return super.onOptionsItemSelected(item)
     }
-*/
 
     /**
      * Callback received when a permissions request has been completed.

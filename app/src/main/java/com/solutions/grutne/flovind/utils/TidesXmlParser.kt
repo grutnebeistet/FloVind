@@ -1,17 +1,13 @@
-package com.solutions.grutne.flovind
+package com.solutions.grutne.flovind.utils
 
 import android.content.ContentValues
 import android.content.Context
-import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import android.util.Xml
 import com.solutions.grutne.flovind.MainActivity
-import com.solutions.grutne.flovind.R
 import com.solutions.grutne.flovind.TidesFragment.Companion.EXTRA_TIDE_QUERY_DATE
-import com.solutions.grutne.flovind.Utils
+import com.solutions.grutne.flovind.data.DbContract
 import com.solutions.grutne.flovind.models.TidesData
-import com.statsnail.roberts.statsnail.data.DbContract
-
 
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException

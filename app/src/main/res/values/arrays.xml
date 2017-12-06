@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="listArrayMapsTypesLabels">
+        <item>@string/map_type_none</item>
+        <item>@string/map_type_normal</item>
+        <item>@string/map_type_satellite</item>
+        <item>@string/map_type_terrain</item>
+        <item>@string/map_type_hybrid</item>
+        <!-- <item>@string/style_label_no_pois_no_transit</item>-->
+    </string-array>
+    <string-array name="listMapTypesValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <!--   <item>@string/style_label_no_pois_no_transit</item>-->
+    </string-array>
+    <string-array name="listArrayMapsLabels">
+        <item>@string/style_label_default</item>
+        <item>@string/style_label_night</item>
+        <item>@string/style_label_grayscale</item>
+        <item>@string/style_label_retro</item>
+        <!-- <item>@string/style_label_no_pois_no_transit</item>-->
+    </string-array>
+    <string-array name="listValues">
+        <item>@string/style_label_default</item>
+        <item>@string/style_label_night</item>
+        <item>@string/style_label_grayscale</item>
+        <item>@string/style_label_retro</item>
+        <!--   <item>@string/style_label_no_pois_no_transit</item>-->
+    </string-array>
+<!--    <string-array name="listArrayMapsZoomLabels">
+        <item>@string/map_type_none</item>
+        <item>@string/map_type_normal</item>
+        <item>@string/map_type_satellite</item>
+        <item>@string/map_type_terrain</item>
+        <item>@string/map_type_hybrid</item>
+        &lt;!&ndash; <item>@string/style_label_no_pois_no_transit</item>&ndash;&gt;
+    </string-array>
+    <string-array name="listMapTypesValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        &lt;!&ndash;   <item>@string/style_label_no_pois_no_transit</item>&ndash;&gt;
+    </string-array>-->
+
+    <string-array name="notifyHoursLabels">
+        <item>@string/one_hour</item>
+        <item>@string/two_hours</item>
+        <item>@string/three_hours</item>
+        <item>@string/four_hours</item>
+    </string-array>
+    <string-array name="notifyHoursValues">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+</resources>

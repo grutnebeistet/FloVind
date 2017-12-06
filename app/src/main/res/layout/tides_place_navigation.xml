@@ -52,7 +52,7 @@
         android:gravity="center"
         android:textSize="@dimen/location_textsize"
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-        tools:text="Trondheim" />
+        tools:text="Jekla langt stedsnavn i helvete" />
 
     <RelativeLayout
         android:id="@+id/next_day_button"

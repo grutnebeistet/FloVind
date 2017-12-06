@@ -1,4 +1,4 @@
-package com.solutions.grutne.flovind
+package com.solutions.grutne.flovind.utils
 
 import android.content.Context
 import android.location.Address
@@ -74,10 +74,14 @@ object Utils {
 
     // Returns a date string in EEE,MMM dd from millisec
     fun getPrettyDate(millis: Long): String {
-        val dateFormat = java.text.SimpleDateFormat("EEE, MMM dd", Locale.getDefault())
+        val dateFormat =
+                if (Locale.getDefault().displayLanguage == "norsk bokmål")
+                    java.text.SimpleDateFormat("EEE dd MMM ", Locale.getDefault())
+                else
+                    java.text.SimpleDateFormat("EEE, MMM dd", Locale.getDefault())
         val date = Date(millis)
 
-        return dateFormat.format(date)
+        return dateFormat.format(date).substring(0,1).toUpperCase() + dateFormat.format(date).substring(1)
     }
 
     // Returns true if the whole hour of time given (next low tide time) is after current time

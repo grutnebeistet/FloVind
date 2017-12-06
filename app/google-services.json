@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "623973845720",
+    "firebase_url": "https://flovind-187300.firebaseio.com",
+    "project_id": "flovind-187300",
+    "storage_bucket": "flovind-187300.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:623973845720:android:f8a1380a337d7d1a",
+        "android_client_info": {
+          "package_name": "com.solutions.grutne.flovind"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "623973845720-ne3jntphmrk9bk0blnto9abu598q6vnj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.solutions.grutne.flovind",
+            "certificate_hash": "46e3be528c3401907e63e7b0e932a954548d043e"
+          }
+        },
+        {
+          "client_id": "623973845720-511j5d381bcc0qbjuhdphr7atribl13r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbg08Iqi0WNaibaq2Acbwav7UQXTv8T0c"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "623973845720-511j5d381bcc0qbjuhdphr7atribl13r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

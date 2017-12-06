@@ -13,7 +13,6 @@ import com.firebase.jobdispatcher.Job
 import com.firebase.jobdispatcher.Lifetime
 import com.firebase.jobdispatcher.RetryStrategy
 import com.firebase.jobdispatcher.Trigger
-import com.statsnail.roberts.statsnail.sync.FirebaseJobService
 
 import java.util.concurrent.TimeUnit
 
@@ -26,7 +25,7 @@ import timber.log.Timber
 object SyncUtils {
     private val SYNC_INTERVAL_HOURS = 5
     private val SYNC_INTERVAL_SECONDS = TimeUnit.HOURS.toSeconds(SYNC_INTERVAL_HOURS.toLong()).toInt()
-    private val SYNC_FLEXTIME_SECONDS = SYNC_INTERVAL_SECONDS / 3
+    private val SYNC_FLEXTIME_SECONDS = 300//SYNC_INTERVAL_SECONDS / 3
 
     private val TIDES_SYNC_TAG = "tides-sync"
 

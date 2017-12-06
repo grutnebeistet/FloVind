@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/padding">
+
+    <ImageView
+        android:id="@+id/rising_icon"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@drawable/moonrise"
+        app:layout_constraintBottom_toBottomOf="@id/rising_time"
+        app:layout_constraintLeft_toRightOf="@id/rising_time"
+        app:layout_constraintTop_toTopOf="@id/rising_time" />
+
+    <TextView
+        android:id="@+id/rising_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/padding_double"
+        android:paddingEnd="@dimen/padding_half"
+        android:paddingRight="@dimen/padding_half"
+        android:text="09:00" />
+
+    <ImageView
+        android:id="@+id/setting_icon"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@drawable/moonset"
+        app:layout_constraintBottom_toBottomOf="@id/setting_time"
+        app:layout_constraintLeft_toRightOf="@id/setting_time"
+        app:layout_constraintTop_toBottomOf="@id/rising_icon"
+        app:layout_constraintTop_toTopOf="@id/setting_time" />
+
+    <TextView
+        android:id="@+id/setting_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/padding_double"
+        app:layout_constraintTop_toBottomOf="@id/rising_time"
+        android:paddingEnd="@dimen/padding_half"
+        android:text="17:00" />
+</android.support.constraint.ConstraintLayout>

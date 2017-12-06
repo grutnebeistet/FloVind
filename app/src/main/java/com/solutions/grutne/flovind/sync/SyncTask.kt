@@ -1,8 +1,8 @@
 package com.solutions.grutne.flovind.sync
 
 import android.content.Context
-import com.solutions.grutne.flovind.NetworkUtils
-import com.statsnail.roberts.statsnail.data.DbContract
+import com.solutions.grutne.flovind.utils.NetworkUtils
+import com.solutions.grutne.flovind.data.DbContract
 
 
 import timber.log.Timber
@@ -11,7 +11,7 @@ import timber.log.Timber
  * Created by Adrian on 30/10/2017.
  */
 
-object StatsnailSyncTask {
+object FloVindSyncTask {
     @Synchronized
     fun syncData(context: Context, homeLocation: Boolean) {
 
@@ -33,9 +33,9 @@ object StatsnailSyncTask {
             }
             if (null != windsData && windsData.isNotEmpty()) {
                 resolver.delete(
-                        DbContract.TidesEntry.CONTENT_URI_WINDS, null, null
+                        DbContract.WindsEntry.CONTENT_URI_WINDS, null, null
                 )
-                resolver.bulkInsert(DbContract.TidesEntry.CONTENT_URI_WINDS, windsData!!)
+                resolver.bulkInsert(DbContract.WindsEntry.CONTENT_URI_WINDS, windsData!!)
             }
 
         } catch (e: Exception) {

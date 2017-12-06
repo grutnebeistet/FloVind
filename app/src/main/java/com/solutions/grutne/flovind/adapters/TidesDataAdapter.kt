@@ -13,6 +13,8 @@ import com.solutions.grutne.flovind.R
 import com.solutions.grutne.flovind.TidesFragment
 
 import kotlinx.android.synthetic.main.tide_list_item.view.*
+import timber.log.Timber
+import java.util.*
 
 class TidesDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<TidesDataAdapter.TdViewHolder>() {
     internal var mCursor: Cursor? = null
@@ -28,6 +30,7 @@ class TidesDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<Ti
         var time: String? = null
         var level: String? = null
 
+        Timber.d("LANAUGE: " + Locale.getDefault().displayLanguage)
         flag = mCursor!!.getString(TidesFragment.INDEX_FLAG)
         time = mCursor!!.getString(TidesFragment.INDEX_LEVEL_TIME)
         level = mContext.getString(R.string.level_format, mCursor!!.getString(TidesFragment.INDEX_TIDE_LEVEL))
@@ -39,7 +42,14 @@ class TidesDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<Ti
             holder.mFlagImg!!.setImageResource(R.drawable.high_tide)
         else if (flag == "low")
             holder.mFlagImg!!.setImageResource(R.drawable.low_tide)
-        holder.mFlag!!.text = mContext.getString(R.string.flag_format, flag)
+
+        flag = if (Locale.getDefault().displayLanguage == "norsk bokmål")
+            if (flag == "high")
+                "Høyvann"
+            else "Lavvann"
+        else mContext.getString(R.string.flag_format, flag)
+
+        holder.mFlag!!.text = flag
         holder.mTime!!.text = time
         holder.mLevel!!.text = level
     }

@@ -2,7 +2,6 @@ package com.solutions.grutne.flovind
 
 import android.content.SharedPreferences
 import android.database.Cursor
-import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.preference.PreferenceManager
@@ -13,8 +12,6 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewParent
-import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
 
@@ -26,36 +23,38 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.solutions.grutne.flovind.MainActivity
 import com.solutions.grutne.flovind.MainActivity.Companion.EXTRA_LATITUDE
 import com.solutions.grutne.flovind.MainActivity.Companion.EXTRA_LONGITUDE
 
 
 import java.io.IOException
-import java.lang.reflect.Field
 import java.text.ParseException
 import java.util.concurrent.TimeUnit
-import com.solutions.grutne.flovind.R
-import com.solutions.grutne.flovind.Utils
 import com.solutions.grutne.flovind.adapters.TidesDataAdapter
 import com.solutions.grutne.flovind.adapters.WindsDataAdapter
-import com.solutions.grutne.flovind.sync.StatsnailSyncTask.syncData
-import com.statsnail.roberts.statsnail.data.DbContract
+import com.solutions.grutne.flovind.data.DbContract
+import com.solutions.grutne.flovind.sync.FloVindSyncTask.syncData
+import com.solutions.grutne.flovind.utils.Utils
 import timber.log.Timber
 
 /**
  * Created by Adrian on 24/10/2017.
  */
 
-class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor> {
-    internal var mTidesRecyclerView = activity!!.findViewById<RecyclerView>(R.id.tides_recycler_view) as RecyclerView
-    internal var mWindsRecyclerView = activity!!.findViewById<RecyclerView>(R.id.winds_recycler_view)
-    internal var mLocationTextView = activity!!.findViewById<TextView>(R.id.location_name)
-    internal var mDateTimeTextView = activity!!.findViewById<TextView>(R.id.forecast_date)
-    internal var mErrorTextView = activity!!.findViewById<TextView>(R.id.tides_error_tv)
-    internal var mNextDay = activity!!.findViewById<RelativeLayout>(R.id.next_day_button)
-    internal var mPrevDay = activity!!.findViewById<RelativeLayout>(R.id.prev_day_button)
-    internal var mContainer = activity!!.findViewById<CardView>(R.id.cardview_container)
+class TidesFragment : android.support.v4.app.Fragment(),
+        android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor>,
+        GoogleMap.OnMyLocationButtonClickListener,
+        GoogleMap.OnInfoWindowClickListener,
+        GoogleMap.OnMarkerClickListener,
+        OnMapReadyCallback {
+    private lateinit var mTidesRecyclerView: RecyclerView
+    private lateinit var mWindsRecyclerView: RecyclerView
+    private lateinit var mLocationTextView: TextView
+    private lateinit var mDateTimeTextView: TextView
+    private lateinit var mErrorTextView: TextView
+    private lateinit var mNextDay: RelativeLayout
+    private lateinit var mPrevDay: RelativeLayout
+    private lateinit var mContainer: CardView
 
     //internal var mResetLoc: ImageView? = null Using Maps built in atm
     //  internal var mNextDayImg = activity!!.findViewById<ImageView>(R.id.next_day_image)
@@ -99,6 +98,7 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
             LAT_LNG = LatLng(latitude, longitude)
         }
 
+
         editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis())).apply()
         mTidesAdapter = TidesDataAdapter(context!!)
         mWindsAdapter = WindsDataAdapter(context!!)
@@ -115,33 +115,43 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
         rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0)
         Timber.d("MAAAAAARGIN: " + resources.getInteger(R.integer.loc_butt_padding_top))
         rlp.setMargins(0, resources.getInteger(R.integer.loc_butt_padding_top), 32, 0)
-
+        mContainer = view.findViewById<CardView>(R.id.cardview_container) as CardView
+        mDateTimeTextView = view.findViewById<TextView>(R.id.forecast_date) as TextView
+        mErrorTextView = view.findViewById<TextView>(R.id.tides_error_tv) as TextView
+        mLocationTextView = view.findViewById<TextView>(R.id.location_name) as TextView
+        mNextDay = view.findViewById<RelativeLayout>(R.id.next_day_button) as RelativeLayout
+        mPrevDay = view.findViewById<RelativeLayout>(R.id.prev_day_button) as RelativeLayout
         if (savedInstanceState != null) {
             mVisibility = savedInstanceState.getInt(CONTAINER_VISIBILITY)
             mContainer!!.visibility = mVisibility
             //            mMap.getUiSettings().setZoomGesturesEnabled(!(mVisibility == View.VISIBLE)); TODO maps er null her vett
         }
-
+        mTidesRecyclerView = view.findViewById<RecyclerView>(R.id.tides_recycler_view) as RecyclerView
         mTidesRecyclerView.layoutManager = LinearLayoutManager(activity)
         mTidesRecyclerView.adapter = mTidesAdapter
 
-        mWindsRecyclerView!!.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false)
-        mWindsRecyclerView!!.adapter = mWindsAdapter
+        mWindsRecyclerView = view.findViewById<RecyclerView>(R.id.winds_recycler_view) as RecyclerView
+        mWindsRecyclerView.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false)
+        mWindsRecyclerView.adapter = mWindsAdapter
+
+
         return view
     }
 
     private fun initLocation() {
+
         try {
             mLocation = arguments!!.getParcelable(LOCATION)
         } catch (e: NullPointerException) {
             e.printStackTrace()
         }
 
-        var useHomeLocation = true
+        val useHomeLocation = true
         val editor = mPreferences!!.edit()
         val longitude: String
         val latitude: String
         if (mLocation != null) {
+            Timber.d("loc notNull latitude: " + mLocation!!.latitude)
             LAT_LNG = LatLng(mLocation!!.latitude, mLocation!!.longitude)
             longitude = mLocation!!.longitude.toString()
             latitude = mLocation!!.latitude.toString()
@@ -149,8 +159,9 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
             editor.putString(EXTRA_LATITUDE, latitude)
             editor.commit()
 
+
         } else {
-            // statsnail satt til trondheim -
+            // i statsnail satt til trondheim -
             showSnackbar("Location") // TODO
         }
         updateValuesOnLocationChange(useHomeLocation)
@@ -173,18 +184,18 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
             mVisibility = View.VISIBLE
         }*/
 
-        mNextDay!!.setOnClickListener(View.OnClickListener {
+        mNextDay.setOnClickListener(View.OnClickListener {
             val currentDate = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
                     Utils.getDate(System.currentTimeMillis()))
             try {
                 val tomorrow = Utils.getDatePlusOne(currentDate)
 
                 if (Utils.isTomorrowLast(tomorrow)) {
-                    mNextDay!!.visibility = View.GONE
+                    mNextDay.visibility = View.INVISIBLE
                     return@OnClickListener
                 } else {
                     mPreferences!!.edit().putString(EXTRA_TIDE_QUERY_DATE, tomorrow).apply()
-                    mDateTimeTextView!!.text = (Utils.getPrettyDate(Utils.getDateInMillisec(tomorrow))) // TODO not very efficient, lag egen metode
+                    mDateTimeTextView.text = (Utils.getPrettyDate(Utils.getDateInMillisec(tomorrow))) // TODO not very efficient, lag egen metode
                     activity!!.supportLoaderManager.restartLoader(LOADER_ID_TIDES, null, this@TidesFragment)
                     activity!!.supportLoaderManager.restartLoader(LOADER_ID_WINDS, null, this@TidesFragment)
                 }
@@ -193,9 +204,9 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
                 e.printStackTrace()
             }
 
-            mPrevDay!!.visibility = View.VISIBLE
+            mPrevDay.visibility = View.VISIBLE
         })
-        mPrevDay!!.setOnClickListener {
+        mPrevDay.setOnClickListener {
             val currentDate = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
                     Utils.getDate(System.currentTimeMillis()))
             try {
@@ -231,7 +242,7 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
     private fun restartLoader(homeLocation: Boolean) {
         try {
             //mLocationTextView.setText(Utils.getPlaceName(getActivity(), homeLocation));
-            mLocationTextView!!.text = (Utils.getPlaceName(context!!, homeLocation))
+            mLocationTextView!!.text = (Utils.getAccuratePlaceName(context!!, homeLocation))
             val dateShown = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
                     Utils.getDate(System.currentTimeMillis()))
             mDateTimeTextView!!.text = (Utils.getPrettyDate(Utils.getDateInMillisec(dateShown)))
@@ -267,10 +278,10 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
             }
 
             LOADER_ID_WINDS -> {
-                sortOrder = DbContract.TidesEntry.COLUMN_TIME_OF_WIND + " ASC"
-                selection = DbContract.TidesEntry.COLUMN_WINDS_DATE + "=?"
+                sortOrder = DbContract.WindsEntry.COLUMN_TIME_OF_WIND + " ASC"
+                selection = DbContract.WindsEntry.COLUMN_WINDS_DATE + "=?"
 
-                return android.support.v4.content.CursorLoader(activity!!, DbContract.TidesEntry.CONTENT_URI_WINDS,
+                return android.support.v4.content.CursorLoader(activity!!, DbContract.WindsEntry.CONTENT_URI_WINDS,
                         WINDS_PROJECTION, selection, selectionArgs, sortOrder)
             }
         }
@@ -335,6 +346,7 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
         mMap!!.setOnMyLocationButtonClickListener(this)
         mMap!!.isMyLocationEnabled = true
         mMap!!.moveCamera(CameraUpdateFactory.newLatLngZoom(LAT_LNG, mMapZoom))
+        Timber.d("Map camera moved to lat: " + LAT_LNG!!.latitude)
 
         val maptype = mPreferences!!.getString(getString(R.string.pref_map_type_key), getString(R.string.map_type_def_value))
 /*        if (maptype == GoogleMap.MAP_TYPE_HYBRID.toString() || maptype == GoogleMap.MAP_TYPE_SATELLITE.toString())
@@ -366,7 +378,7 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
             editor.commit()
             var place = ""
             try {
-                place = Utils.getPlaceName(context!!, latLng) // TODO pinpusse accurateplace
+                place = Utils.getAccuratePlaceName(context!!, latLng) // TODO pinpusse accurateplace
                 //Timber.d(Utils.getAccuratePlaceName(getActivity(), latLng));
             } catch (e: IOException) {
                 e.printStackTrace()
@@ -375,7 +387,7 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
             if (mCurrentMarker != null) mCurrentMarker!!.remove()
             mCurrentMarker = mMap!!.addMarker(MarkerOptions()
                     .position(latLng)
-                    .title("View conditions")
+                    .title(getString(R.string.conditions_label))
                     .snippet(place))
             mCurrentMarker!!.showInfoWindow()
             mMap!!.setOnInfoWindowClickListener(this@TidesFragment)
@@ -418,9 +430,10 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
         //   outState.putInt(SELECTED_STYLE, mSelectedStyleId);
         if (mMap != null) outState.putFloat(MAP_ZOOM, mMap!!.cameraPosition.zoom)
         // outState.putParcelable(LOCATION, mLocation);
-        outState.putDouble(EXTRA_LATITUDE, LAT_LNG!!.latitude)
-        outState.putDouble(EXTRA_LONGITUDE, LAT_LNG!!.longitude)
-        Timber.d("SAVED LAT: " + LAT_LNG!!.latitude)
+        if (LAT_LNG != null) {
+            outState.putDouble(EXTRA_LATITUDE, LAT_LNG!!.latitude)
+            outState.putDouble(EXTRA_LONGITUDE, LAT_LNG!!.longitude)
+        }
         //outState.putString(PLACE_NAME, mLocationTextView.getText().toString());
         outState.putInt(CONTAINER_VISIBILITY, mContainer!!.visibility)
         super.onSaveInstanceState(outState)
@@ -490,7 +503,7 @@ class TidesFragment : android.support.v4.app.Fragment(), android.support.v4.app.
         val INDEX_FLAG = 2
         val INDEX_ERROR = 4
 
-        val WINDS_PROJECTION = arrayOf<String>(DbContract.TidesEntry.COLUMN_WINDS_DATE, DbContract.TidesEntry.COLUMN_TIME_OF_WIND, DbContract.TidesEntry.COLUMN_WIND_DIR_DEG, DbContract.TidesEntry.COLUMN_WIND_SPEED, DbContract.TidesEntry.COLUMN_WIND_DIRECTION)
+        val WINDS_PROJECTION = arrayOf<String>(DbContract.WindsEntry.COLUMN_WINDS_DATE, DbContract.WindsEntry.COLUMN_TIME_OF_WIND, DbContract.WindsEntry.COLUMN_WIND_DIR_DEG, DbContract.WindsEntry.COLUMN_WIND_SPEED, DbContract.WindsEntry.COLUMN_WIND_DIRECTION)
         val INDEX_WIND_DATE = 0
         val INDEX_WIND_TIME = 1
         val INDEX_WIND_DIR_DEG = 2

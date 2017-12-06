@@ -1,5 +1,4 @@
-package com.solutions.grutne.flovind
-import android.app.IntentService
+package com.solutions.grutne.flovind.utils
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -14,6 +13,8 @@ import android.preference.PreferenceManager
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.TaskStackBuilder
 import android.support.v4.content.ContextCompat
+import com.solutions.grutne.flovind.MainActivity
+import com.solutions.grutne.flovind.R
 
 
 import timber.log.Timber

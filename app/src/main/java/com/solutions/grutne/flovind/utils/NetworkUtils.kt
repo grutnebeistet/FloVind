@@ -1,12 +1,12 @@
-package com.solutions.grutne.flovind
+package com.solutions.grutne.flovind.utils
 
 import android.content.ContentValues
 import android.content.Context
 import android.location.Location
 import android.net.Uri
 import android.preference.PreferenceManager
-import com.solutions.grutne.flovind.models.Station
-
+import com.solutions.grutne.flovind.MainActivity
+import com.solutions.grutne.flovind.R
 
 
 import org.xmlpull.v1.XmlPullParserException
@@ -15,7 +15,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.ArrayList
 import java.util.concurrent.TimeUnit
 
 import timber.log.Timber
@@ -47,7 +46,7 @@ object NetworkUtils {
         else
             preference.getString(MainActivity.EXTRA_LONGITUDE, "")
 
-        val language = "en" // TODO language setting
+        val language = context.getString(R.string.language)//"en" // TODO language setting
         val fromDate = Utils.getDate(System.currentTimeMillis())
         val offset = TimeUnit.DAYS.toMillis(10)
         val tillDate = Utils.getDate(System.currentTimeMillis() + offset)

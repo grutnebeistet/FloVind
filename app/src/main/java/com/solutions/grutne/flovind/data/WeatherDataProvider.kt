@@ -5,15 +5,13 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.UriMatcher
 import android.database.Cursor
-import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.util.Log
-import com.statsnail.roberts.statsnail.data.DbContract
 
 import timber.log.Timber
 
 
-class TidesDataProvider : ContentProvider() {
+class WeatherDataProvider : ContentProvider() {
 
     internal var mDbHelper: TidesDbHelper? = null
 
@@ -33,7 +31,7 @@ class TidesDataProvider : ContentProvider() {
 
         when (uriMatch) {
             TIDES -> returnCursor = db.query(DbContract.TidesEntry.TABLE_TIDES, projection, selection, selArgs, null, null, sortOrder)
-            WINDS -> returnCursor = db.query(DbContract.TidesEntry.TABLE_WINDS, projection, selection, selArgs, null, null, sortOrder)
+            WINDS -> returnCursor = db.query(DbContract.WindsEntry.TABLE_WINDS, projection, selection, selArgs, null, null, sortOrder)
             TIDES_ID -> {
                 selection = DbContract.TidesEntry.COLUMN_TIDES_ID + "=?"
                 selArgs = arrayOf(ContentUris.parseId(uri).toString())
@@ -52,7 +50,7 @@ class TidesDataProvider : ContentProvider() {
         val uriMatch = mUriMatcher.match(uri)
         when (uriMatch) {
             TIDES -> newRowId = db.insert(DbContract.TidesEntry.TABLE_TIDES, null, contentValues)
-            WINDS -> newRowId = db.insert(DbContract.TidesEntry.TABLE_WINDS, null, contentValues)
+            WINDS -> newRowId = db.insert(DbContract.WindsEntry.TABLE_WINDS, null, contentValues)
             else -> throw IllegalArgumentException("Cannot insert for given uri: " + uri)
         }
         if (newRowId == -1L) {
@@ -70,7 +68,7 @@ class TidesDataProvider : ContentProvider() {
         val deletedRows: Int
         when (mUriMatcher.match(uri)) {
             TIDES -> deletedRows = db.delete(DbContract.TidesEntry.TABLE_TIDES, selection, selectionArgs)
-            WINDS -> deletedRows = db.delete(DbContract.TidesEntry.TABLE_WINDS, selection, selectionArgs)
+            WINDS -> deletedRows = db.delete(DbContract.WindsEntry.TABLE_WINDS, selection, selectionArgs)
             TIDES_ID -> {
                 selection = DbContract.TidesEntry.COLUMN_TIDES_ID + "=?"
                 selectionArgs = arrayOf(ContentUris.parseId(uri).toString())
@@ -94,7 +92,7 @@ class TidesDataProvider : ContentProvider() {
 
         when (mUriMatcher.match(uri)) {
             TIDES -> rowsUpdated = db.update(DbContract.TidesEntry.TABLE_TIDES, contentValues, selection, selectionArgs)
-            WINDS -> rowsUpdated = db.update(DbContract.TidesEntry.TABLE_WINDS, contentValues, selection, selectionArgs)
+            WINDS -> rowsUpdated = db.update(DbContract.WindsEntry.TABLE_WINDS, contentValues, selection, selectionArgs)
             TIDES_ID -> {
                 selection = DbContract.TidesEntry.COLUMN_TIDES_ID + "=?"
                 selectionArgs = arrayOf(ContentUris.parseId(uri).toString())
@@ -117,7 +115,7 @@ class TidesDataProvider : ContentProvider() {
                 Timber.d("bulking TIDES")
             }
             WINDS -> {
-                table = DbContract.TidesEntry.TABLE_WINDS
+                table = DbContract.WindsEntry.TABLE_WINDS
                 Timber.d("bulking WINDS")
             }
             else -> return super.bulkInsert(uri, values)
@@ -152,7 +150,7 @@ class TidesDataProvider : ContentProvider() {
     }
 
     companion object {
-        private val LOG_TAG = TidesDataProvider::class.java.simpleName
+        private val LOG_TAG = WeatherDataProvider::class.java.simpleName
         /**
          * URI matcher codes for the content URI:
          * TIDES for general table query

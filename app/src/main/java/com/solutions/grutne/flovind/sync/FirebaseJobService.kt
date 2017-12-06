@@ -1,10 +1,7 @@
-package com.statsnail.roberts.statsnail.sync
-
-import android.content.Context
+package com.solutions.grutne.flovind.sync
 import android.os.AsyncTask
 
 import com.firebase.jobdispatcher.JobParameters
-import com.solutions.grutne.flovind.sync.StatsnailSyncTask
 
 import timber.log.Timber
 
@@ -17,16 +14,16 @@ class FirebaseJobService : com.firebase.jobdispatcher.JobService() {
 
     override fun onStartJob(job: JobParameters): Boolean {
         mFetchTidesDataTask = object : AsyncTask<Void, Void, Void>() {
-            override fun doInBackground(vararg params: Void): Void? {
+            override fun doInBackground(vararg params: Void?): Void? {
                 Timber.d("job, do in BG")
                 val context = applicationContext
-                StatsnailSyncTask.syncData(context, true)
+                FloVindSyncTask.syncData(context, true)
                 // NotificationUtils.notifyOfLowTideTest(context, " doInBG");
                 jobFinished(job, true)
                 return null
             }
 
-            override fun onPostExecute(aVoid: Void) {
+            override fun onPostExecute(aVoid: Void?) {
                 jobFinished(job, true)
             }
         }

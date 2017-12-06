@@ -12,6 +12,6 @@ import timber.log.Timber
 class SyncIntentService : IntentService("StatsnailSyncIntentService") {
     override fun onHandleIntent(intent: Intent?) {
         Timber.d("onHandleIntent, call syncData")
-        StatsnailSyncTask.syncData(this, true)
+        FloVindSyncTask.syncData(this, true)
     }
 }

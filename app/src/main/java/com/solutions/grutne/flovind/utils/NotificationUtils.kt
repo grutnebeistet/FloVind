@@ -1,26 +1,15 @@
-package com.solutions.grutne.flovind
+package com.solutions.grutne.flovind.utils
 
 import android.app.AlarmManager
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
-import android.graphics.BitmapFactory
-import android.graphics.Color
-import android.media.RingtoneManager
 import android.os.Build
 import android.preference.PreferenceManager
-import android.support.v4.app.NotificationCompat
-import android.support.v4.app.TaskStackBuilder
-import android.support.v4.content.ContextCompat
 import com.solutions.grutne.flovind.R
-import com.solutions.grutne.flovind.Utils
 import com.solutions.grutne.flovind.models.TidesData
 
 import java.util.Calendar
-import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 
 import timber.log.Timber

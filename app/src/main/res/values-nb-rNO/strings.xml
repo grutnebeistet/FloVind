@@ -1,0 +1,46 @@
+<resources>
+    <string name="app_name">FloVind</string>
+    <string name="language">no</string>
+    <string name="connection_error">Vennligst sjekk internettforbindelsen</string>
+    <string name="flag_format" formatted="true" translatable="true">%sVANN</string>
+    <string name="level_format" formatted="true" translatable="true">%s cm</string>
+    <string name="no_location_detected">
+        Ingen lokasjon oppdaget. Sørg for at lokasjon er aktivert på telefonen.
+    </string>
+    <string name="permission_rationale">Lokasjonstillatelse er nødvendig for at applikasjonen skal fungere optimalt.</string>
+    <string name="permission_denied_explanation">Tillatelse ble nektet, men er nødvendig for kjernefunksjonalitet.</string>
+    <string name="settings">Innstillinger</string>
+    <string name="error_unknown">"Ukjent feil"</string>
+    <string name="conditions_label">Se forholdene</string>
+    <!--    Styling & Prefs   -->
+    <string name="map_pref_key">mapStyleKey</string>
+    <string name="map_type_label">Karttype</string>
+    <string name="map_type_def_value">1</string>
+    <string name="map_type_normal">Normal (har flere stilarter)</string>
+    <string name="map_type_satellite">Satellitt</string>
+    <string name="map_type_hybrid">Hybrid</string>
+    <string name="map_type_terrain">Terreng</string>
+    <string name="map_type_none">Ingen kart</string>
+    <string name="map_style_label">Kartstil</string>
+    <string name="styled_map_demo_label">Stylet kart</string>
+    <string name="styled_map_demo_description">Demonstrates how to style a map.</string>
+    <string name="style_label_retro">Retro</string>
+    <string name="style_label_night">Natt</string>
+    <string name="style_label_grayscale">Gråtoner</string>
+    <string name="style_label_default">Standard</string>
+    <string name="style_choose">Velg stil</string>
+    <string name="style_set_to">Stil satt til: %1$s</string>
+    <string name="pref_enable_notifications_false">Ikke aktivert</string>
+    <string name="pref_enable_notifications_true">Aktivert</string>
+    <string name="pref_enable_notifications_label">Send varsler</string>
+    <string name="offset_label">I forkant av fjære</string>
+    <string name="one_hour">Èn time før</string>
+    <string name="two_hours">To timer før</string>
+    <string name="three_hours">Tre timer før</string>
+    <string name="four_hours">Fire timer før</string>
+    <string name="notification_label">Varsler</string>
+    <string name="map_category_label">Kart</string>
+    <string name="pref_header_about">Om</string>
+    <string name="title_version">Versjon</string>
+
+</resources>

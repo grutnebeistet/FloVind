@@ -1,16 +1,14 @@
-package com.solutions.grutne.flovind
+package com.solutions.grutne.flovind.utils
 
 import android.content.ContentValues
 import android.util.Xml
-import com.statsnail.roberts.statsnail.data.DbContract
+import com.solutions.grutne.flovind.data.DbContract
 
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 
 import java.io.IOException
 import java.io.InputStream
-
-import timber.log.Timber
 
 class YrApiXmlParser {
 
@@ -64,16 +62,16 @@ class YrApiXmlParser {
                                     windDir = parser.getAttributeValue(2)
                                     winDirDeg = parser.getAttributeValue(1)
 
-                                    wind.put(DbContract.TidesEntry.COLUMN_WIND_DIRECTION, windDir)
-                                    wind.put(DbContract.TidesEntry.COLUMN_WIND_DIR_DEG, winDirDeg)
+                                    wind.put(DbContract.WindsEntry.COLUMN_WIND_DIRECTION, windDir)
+                                    wind.put(DbContract.WindsEntry.COLUMN_WIND_DIR_DEG, winDirDeg)
                                 }
                                 if ("windSpeed" == name) {
                                     windSpeed = parser.getAttributeValue(1)
-                                    wind.put(DbContract.TidesEntry.COLUMN_WIND_SPEED, windSpeed)
+                                    wind.put(DbContract.WindsEntry.COLUMN_WIND_SPEED, windSpeed)
                                     //   Timber.d("Time: " + Utils.getFormattedTime(time) + "\nDate: " + Utils.getFormattedDate(time));
-                                    wind.put(DbContract.TidesEntry.COLUMN_WINDS_DATE,
+                                    wind.put(DbContract.WindsEntry.COLUMN_WINDS_DATE,
                                             Utils.getFormattedDate(time))
-                                    wind.put(DbContract.TidesEntry.COLUMN_TIME_OF_WIND,
+                                    wind.put(DbContract.WindsEntry.COLUMN_TIME_OF_WIND,
                                             Utils.getFormattedTime(time))
 
                                     windsValues[index] = wind
