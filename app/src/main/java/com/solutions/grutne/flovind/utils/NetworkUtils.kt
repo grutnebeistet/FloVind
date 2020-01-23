@@ -51,7 +51,7 @@ object NetworkUtils {
         val offset = TimeUnit.DAYS.toMillis(10)
         val tillDate = Utils.getDate(System.currentTimeMillis() + offset)
 
-        return "http://api.sehavniva.no/tideapi.php?lat=" + //63.4581662 +
+        val requestUrl = "http://api.sehavniva.no/tideapi.php?lat=" + //63.4581662 +
 
                 latitude +
                 "&lon=" + //10.2795140 +
@@ -63,7 +63,8 @@ object NetworkUtils {
                 tillDate +
                 "T00%3A00" +
                 "&datatype=tab&refcode=cd&place=&file=&lang=" + language + "&interval=60&dst=0&tzone=1&tide_request=locationdata"
-
+        Timber.d("TidesRequest $requestUrl")
+return requestUrl
     }
 
 
@@ -166,6 +167,8 @@ object NetworkUtils {
         conn.doInput = true
         // Starts the query
         conn.connect()
+
+        Timber.d("Response code ${conn.responseCode}")
 
         return conn.inputStream
     }

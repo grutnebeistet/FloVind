@@ -43,8 +43,9 @@ class TidesXmlParser {
 
     @Throws(XmlPullParserException::class, IOException::class)
     private fun readNearbyStationEntry(parser: XmlPullParser): Array<ContentValues?>? {
-        var tidesValues: Array<ContentValues?>?
+        val tidesValues: Array<ContentValues?>?
         val preferences = PreferenceManager.getDefaultSharedPreferences(mContext)
+        Timber.d("readNearbyStationEntry init: parser.eventType ${parser.eventType} -- parser.name ${parser.name}")
         if (parser.name == "error") {
             if (parser.next() == XmlPullParser.TEXT) {
                 tidesValues = arrayOfNulls(1)
@@ -56,13 +57,11 @@ class TidesXmlParser {
                                 Utils.getDate(System.currentTimeMillis())))
                 tidesValues[0] = error
                 return tidesValues
-
-                //                return new TidesData(null, null, null, null, null, null, parser.getText());
-
             }
         }
         parser.require(XmlPullParser.START_TAG, ns, "tide")
 
+        var info: String? = null
         var stationName: String? = null
         var stationCode: String? = null
         var latitude: String? = null
@@ -72,9 +71,9 @@ class TidesXmlParser {
             if (parser.eventType != XmlPullParser.START_TAG) {
                 continue
             }
-
-            if (parser.name == "nodata" || parser.name == "service") {
-                if (parser.getAttributeName(0) == "info" || parser.getAttributeName(0) == "cominfo") {
+            Timber.d("parser.eventType ${parser.eventType} -- parser.name ${parser.name}")
+            if (parser.name == "nodata") { // TODO verify structure with the updated API
+                if (parser.getAttributeName(0) == "info") {
                     tidesValues = arrayOfNulls(1)
                     val error = ContentValues()
                     error.put(DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG, parser.getAttributeValue(0))
@@ -84,8 +83,19 @@ class TidesXmlParser {
                     tidesValues[0] = error
                     return tidesValues
                 }
-                //return new TidesData(null, null, null, null, null, null, parser.getAttributeValue(0));
-
+            }
+            if (parser.name == "service") {
+//                if (parser.getAttributeName(0) == "info" || parser.getAttributeName(0) == "cominfo") {
+//                    tidesValues = arrayOfNulls(1)
+//                    val error = ContentValues()
+//                    error.put(DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG, parser.getAttributeValue(0))
+//                    error.put(DbContract.TidesEntry.COLUMN_TIDES_DATE,
+//                            preferences.getString(EXTRA_TIDE_QUERY_DATE,
+//                                    Utils.getDate(System.currentTimeMillis())))
+//                    tidesValues[0] = error
+//                    return tidesValues
+//                }
+                parser.nextTag()
             }
             if (parser.name == "location") {
                 val attributeCount = parser.attributeCount
@@ -132,7 +142,7 @@ class TidesXmlParser {
                 }
 
                 // prepare notification only if parsed area is actual location
-                // No point in checking levels beyond the first 6 regarding notification
+                // No point in checking levels beyond the first 6, regarding notification
                 val homeLat = preferences.getString(
                         MainActivity.HOME_LAT,"")
                 val homeLong = preferences.getString(

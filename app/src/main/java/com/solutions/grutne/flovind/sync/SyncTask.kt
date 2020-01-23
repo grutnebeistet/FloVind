@@ -22,6 +22,7 @@ object FloVindSyncTask {
             val windsData = NetworkUtils.loadWindsXml(windsRequestUrl)
 
             val tidesRequestUrl = NetworkUtils.buildTidesRequestUrl(context, homeLocation)
+            Timber.d("Tide URL $tidesRequestUrl")
             val tidesData = NetworkUtils.loadNearbyXml(context, tidesRequestUrl)
 
             val resolver = context.contentResolver
