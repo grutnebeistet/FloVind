@@ -8,6 +8,8 @@
 
     <ImageView
         android:id="@+id/rising_icon"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:src="@drawable/sunrise" />
@@ -24,6 +26,8 @@
 
     <ImageView
         android:id="@+id/setting_icon"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:src="@drawable/sunset"

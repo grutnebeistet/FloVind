@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">FloVind</string>
-    <string name="app_version">1.01</string>
-    <string name="authority">com.solutions.grutne.flovind.data.TidesDataProvider</string>
+    <string name="app_version" translatable="false">1.01</string>
+    <string name="authority" translatable="false">com.solutions.grutne.flovind.data.TidesDataProvider</string>
     <string name="language">en</string>
     <string name="connection_error">Unable to load content. Check your network connection.</string>
     <string name="xml_error">Error parsing XML.</string>
@@ -31,12 +31,12 @@
     <string name="style_label_retro">Retro</string>
     <string name="style_label_night">Night</string>
     <string name="style_label_grayscale">Grayscale</string>
-    <string name="style_label_no_pois_no_transit">No POIs or transit</string>
+    <string name="style_label_no_pois_no_transit" translatable="false">No POIs or transit</string>
     <string name="style_label_default">Default</string>
     <string name="style_choose">Choose style</string>
     <string name="style_set_to">Style set to: %1$s</string>
-    <string name="map_zoom_def_value">10</string>
-    <string name="pref_map_type_key">map_type</string>
+    <string name="map_zoom_def_value" translatable="false">10</string>
+    <string name="pref_map_type_key" translatable="false">map_type</string>
     <string name="pref_enable_notifications_key" translatable="false">enable_notify</string>
     <string name="pref_enable_notifications_false">Not Enabled</string>
     <string name="pref_enable_notifications_true">Enabled</string>
@@ -46,21 +46,21 @@
     <string name="two_hours">Two hours ahead</string>
     <string name="three_hours">Three hours ahead</string>
     <string name="four_hours">Four hours ahead</string>
-    <string name="notify_hours_default">3</string>
-    <string name="notify_hours_key">notify_hours</string>
+    <string name="notify_hours_default" translatable="false">3</string>
+    <string name="notify_hours_key" translatable="false">notify_hours</string>
     <string name="pref_header_about">About</string>
     <string name="title_version">Version</string>
     <string name="notification_label">Notifications</string>
     <string name="map_category_label">Map</string>
     <!--    Content Description    -->
-    <string name="content_desc_location">Location name</string>
-    <string name="content_desc_date">Date</string>
-    <string name="content_desc_tide_flag">Tide flag</string>
-    <string name="content_desc_tide_time">Time of tide</string>
-    <string name="content_desc_tide_level">Water level in cm</string>
-    <string name="content_desc_tide_img">Tide flag image</string>
-    <string name="content_desc_location_icon">Reset Location</string>
-    <string name="content_desc_previous_day">Previous day</string>
-    <string name="content_desc_next_day">Next day</string>
-    <string name="content_desc_error">Error message</string>
+    <string name="content_desc_location" translatable="false">Location name</string>
+    <string name="content_desc_date" translatable="false">Date</string>
+    <string name="content_desc_tide_flag" translatable="false">Tide flag</string>
+    <string name="content_desc_tide_time" translatable="false">Time of tide</string>
+    <string name="content_desc_tide_level" translatable="false">Water level in cm</string>
+    <string name="content_desc_tide_img" translatable="false">Tide flag image</string>
+    <string name="content_desc_location_icon" translatable="false">Reset Location</string>
+    <string name="content_desc_previous_day" translatable="false">Previous day</string>
+    <string name="content_desc_next_day" translatable="false">Next day</string>
+    <string name="content_desc_error" translatable="false">Error message</string>
 </resources>

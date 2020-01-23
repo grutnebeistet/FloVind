@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">FloVind</string>
     <string name="language">no</string>
+    <string name="xml_error">Error parsing XML.</string>
     <string name="connection_error">Vennligst sjekk internettforbindelsen</string>
     <string name="flag_format" formatted="true" translatable="true">%sVANN</string>
     <string name="level_format" formatted="true" translatable="true">%s cm</string>

@@ -97,8 +97,7 @@ object NetworkUtils {
     }
 
     fun buildWindsRequestUrl(context: Context, homeLocation: Boolean): String {
-        val base = "https://beta.api.met.no/weatherapi/locationforecast/1.9"
-        // String base = "http://api.met.no/weatherapi/locationforecast/1.9/";
+        val base = "https://api.met.no/weatherapi/locationforecast/1.9"
         //?lat=60.10;lon=9.58";
 
         val preference = PreferenceManager.getDefaultSharedPreferences(context)
