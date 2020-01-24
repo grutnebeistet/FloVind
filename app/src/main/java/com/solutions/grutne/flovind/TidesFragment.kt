@@ -14,15 +14,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.TextView
+import com.google.android.gms.maps.*
+import com.google.android.gms.maps.model.*
 
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
 import com.solutions.grutne.flovind.MainActivity.Companion.EXTRA_LATITUDE
 import com.solutions.grutne.flovind.MainActivity.Companion.EXTRA_LONGITUDE
 
@@ -35,6 +29,7 @@ import com.solutions.grutne.flovind.adapters.WindsDataAdapter
 import com.solutions.grutne.flovind.data.DbContract
 import com.solutions.grutne.flovind.sync.FloVindSyncTask.syncData
 import com.solutions.grutne.flovind.utils.Utils
+import kotlinx.android.synthetic.main.activity_main.*
 import timber.log.Timber
 
 /**
@@ -56,13 +51,9 @@ class TidesFragment : android.support.v4.app.Fragment(),
     private lateinit var mPrevDay: RelativeLayout
     private lateinit var mContainer: CardView
 
-    //internal var mResetLoc: ImageView? = null Using Maps built in atm
-    //  internal var mNextDayImg = activity!!.findViewById<ImageView>(R.id.next_day_image)
-    //internal var mPrevDayImg = activity!!.findViewById<ImageView>(R.id.prev_day_image) unødvendige ba
 
     private var mCurrentMarker: Marker? = null
 
-    internal var TAG = TidesFragment::class.java.simpleName
     private var mMap: GoogleMap? = null
     private var mLocationButton: View? = null
     // Stores the ID of the currently selected style, so that we can re-apply it when
@@ -94,7 +85,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
             editor.putString(EXTRA_LATITUDE, latitude.toString())
             editor.putString(EXTRA_LONGITUDE, longitude.toString())
             editor.apply()
-            Timber.d("Loaded LAT: " + latitude)
+
             LAT_LNG = LatLng(latitude, longitude)
         }
 
@@ -113,8 +104,8 @@ class TidesFragment : android.support.v4.app.Fragment(),
         // position on right bottom
         rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE)
         rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0)
-        Timber.d("MAAAAAARGIN: " + resources.getInteger(R.integer.loc_butt_padding_top))
         rlp.setMargins(0, resources.getInteger(R.integer.loc_butt_padding_top), 32, 0)
+
         mContainer = view.findViewById<CardView>(R.id.cardview_container) as CardView
         mDateTimeTextView = view.findViewById<TextView>(R.id.forecast_date) as TextView
         mErrorTextView = view.findViewById<TextView>(R.id.tides_error_tv) as TextView
@@ -123,8 +114,8 @@ class TidesFragment : android.support.v4.app.Fragment(),
         mPrevDay = view.findViewById<RelativeLayout>(R.id.prev_day_button) as RelativeLayout
         if (savedInstanceState != null) {
             mVisibility = savedInstanceState.getInt(CONTAINER_VISIBILITY)
-            mContainer!!.visibility = mVisibility
-            //            mMap.getUiSettings().setZoomGesturesEnabled(!(mVisibility == View.VISIBLE)); TODO maps er null her vett
+            mContainer.visibility = mVisibility
+
         }
         mTidesRecyclerView = view.findViewById<RecyclerView>(R.id.tides_recycler_view) as RecyclerView
         mTidesRecyclerView.layoutManager = LinearLayoutManager(activity)
@@ -177,13 +168,6 @@ class TidesFragment : android.support.v4.app.Fragment(),
         } else
             restartLoader(false)
 
-/*        mResetLoc!!.setOnClickListener {
-            initLocation()
-            onMapReady(mMap)
-            mMapZoom = MAP_ZOOM_DEFAULT.toFloat()
-            mVisibility = View.VISIBLE
-        }*/
-
         mNextDay.setOnClickListener(View.OnClickListener {
             val currentDate = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
                     Utils.getDate(System.currentTimeMillis()))
@@ -212,7 +196,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
             try {
                 val yesterday = Utils.getDateMinusOne(currentDate)
                 mPreferences!!.edit().putString(EXTRA_TIDE_QUERY_DATE, yesterday).apply()
-                mDateTimeTextView!!.text = (Utils.getPrettyDate(Utils.getDateInMillisec(yesterday)))
+                mDateTimeTextView.text = (Utils.getPrettyDate(Utils.getDateInMillisec(yesterday)))
                 activity!!.supportLoaderManager.restartLoader(LOADER_ID_TIDES, null, this@TidesFragment)
                 activity!!.supportLoaderManager.restartLoader(LOADER_ID_WINDS, null, this@TidesFragment)
             } catch (e: ParseException) {
@@ -225,9 +209,9 @@ class TidesFragment : android.support.v4.app.Fragment(),
 
     override fun onResume() {
         super.onResume()
-        if (!Utils.workingConnection(context!!)) {
-            mNextDay!!.visibility = View.INVISIBLE
-            mPrevDay!!.visibility = View.INVISIBLE
+        if (!Utils.workingConnection(context!!)) { // TODO and adapter empty for day btns?
+            mNextDay.visibility = View.INVISIBLE
+            mPrevDay.visibility = View.INVISIBLE
             showSnackbar(getString(R.string.connection_error))
         }
     }
@@ -241,20 +225,20 @@ class TidesFragment : android.support.v4.app.Fragment(),
 
     private fun restartLoader(homeLocation: Boolean) {
         try {
-            //mLocationTextView.setText(Utils.getPlaceName(getActivity(), homeLocation));
-            mLocationTextView!!.text = (Utils.getAccuratePlaceName(context!!, homeLocation))
+            mLocationTextView.text = Utils.getPlaceName(context!!, homeLocation)
+//            mLocationTextView!!.text = (Utils.getAccuratePlaceName(context!!, homeLocation))
             val dateShown = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
                     Utils.getDate(System.currentTimeMillis()))
-            mDateTimeTextView!!.text = (Utils.getPrettyDate(Utils.getDateInMillisec(dateShown)))
+            mDateTimeTextView.text = (Utils.getPrettyDate(Utils.getDateInMillisec(dateShown!!)))
         } catch (e: IOException) {
             e.printStackTrace()
-            mErrorTextView!!.setText(R.string.error_unknown)
+            mErrorTextView.setText(R.string.error_unknown)
         } catch (e: NullPointerException) {
             e.printStackTrace()
-            mErrorTextView!!.setText(R.string.error_unknown)
+            mErrorTextView.setText(R.string.error_unknown)
         } catch (e: ParseException) {
             e.printStackTrace()
-            mErrorTextView!!.setText(R.string.error_unknown)
+            mErrorTextView.setText(R.string.error_unknown)
         }
 
         activity!!.supportLoaderManager.restartLoader(LOADER_ID_TIDES, null, this)
@@ -289,38 +273,56 @@ class TidesFragment : android.support.v4.app.Fragment(),
     }
 
     override fun onLoadFinished(loader: android.support.v4.content.Loader<Cursor>, cursor: Cursor?) {
-        Timber.d("onLoad finies, count: " + cursor!!.count)
-        mContainer!!.visibility = mVisibility
-        mMap!!.uiSettings.isZoomControlsEnabled = mContainer!!.visibility != View.VISIBLE
+
+        mMap!!.uiSettings.isZoomControlsEnabled = mContainer.visibility != View.VISIBLE
+
+//        val bounds = LatLngBounds(LatLng(57.817944, 7.600304), LatLng(71.171213, 25.793040))
+//        mMap!!.setLatLngBoundsForCameraTarget(bounds)
+
         val currentDate = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
                 Utils.getDate(System.currentTimeMillis()))
         if (currentDate < (Utils.getDate(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1)))) {
-            mPrevDay!!.visibility = View.INVISIBLE
+            mPrevDay.visibility = View.INVISIBLE
         }
-        if (loader.id == LOADER_ID_WINDS) {
-            mWindsAdapter!!.swapCursor(cursor)
-        }
-        if (loader.id == LOADER_ID_TIDES) { // TODO method
-            if (cursor.count == 0) {
-                mErrorTextView!!.visibility = View.VISIBLE
-                mErrorTextView!!.setText(R.string.connection_error)
-                mNextDay!!.visibility = View.INVISIBLE
-            } else if (cursor.count <= 2) {
-                mWindsRecyclerView!!.visibility = View.GONE // TODO fikse - problemet er eldre api ~23
-                cursor.moveToFirst()
-                mErrorTextView!!.visibility = View.VISIBLE
-                mErrorTextView!!.text = cursor.getString(INDEX_ERROR)
-                //  Toast.makeText(getActivity(), "Error: " + cursor.getString(INDEX_ERROR), Toast.LENGTH_SHORT).show();
-                mNextDay!!.visibility = View.INVISIBLE
-                mTidesAdapter!!.swapCursor(null)
-            } else {
-                mWindsRecyclerView!!.visibility = View.VISIBLE // TODO fikse - problemet er eldre api ~23
-                mTidesAdapter!!.swapCursor(cursor)
-                mErrorTextView!!.visibility = View.GONE
-                mNextDay!!.visibility = View.VISIBLE
+        when (loader.id) {
+            LOADER_ID_WINDS -> {
+                Timber.d("onLoadFinished Winds: count: " + cursor?.count)
+                mWindsAdapter!!.swapCursor(cursor)
+
+            }
+            LOADER_ID_TIDES -> {
+                when (cursor?.count) {
+
+                    0 -> {
+                        Timber.d("onLoadFinished Tides 1: count: " + cursor.count + "  tidesapterCount ${mTidesRecyclerView.adapter.itemCount}")
+                        mErrorTextView.visibility = View.VISIBLE
+                        mErrorTextView.setText(R.string.connection_error)
+                        mNextDay.visibility = View.INVISIBLE
+                    }
+                    in 1..2 -> {// cursor.count <= 2) {
+                        Timber.d("onLoadFinished Tides 2: count: " + cursor?.count)
+                        mWindsRecyclerView.visibility = View.GONE // TODO fikse - problemet er eldre api ~23
+                        cursor?.moveToFirst()
+                        mErrorTextView.visibility = View.VISIBLE
+                        mErrorTextView.text = cursor?.getString(INDEX_ERROR)
+                        //  Toast.makeText(getActivity(), "Error: " + cursor.getString(INDEX_ERROR), Toast.LENGTH_SHORT).show();
+                        mNextDay.visibility = View.INVISIBLE
+                        mTidesAdapter!!.swapCursor(null)
+                    }
+                    else -> {
+                        Timber.d("onLoadFinished Tides 3: count: " + cursor?.count)
+                        mWindsRecyclerView.visibility = View.VISIBLE // TODO fikse - problemet er eldre api ~23
+                        mTidesAdapter!!.swapCursor(cursor)
+                        mErrorTextView.visibility = View.GONE
+                        mNextDay.visibility = View.VISIBLE
+                    }
+                }
             }
         }
-
+        if (locationBtnCliked) {
+            mContainer.visibility = View.VISIBLE
+//            locationBtnCliked = false
+        }
     }
 
     override fun onLoaderReset(loader: android.support.v4.content.Loader<Cursor>) {
@@ -345,8 +347,10 @@ class TidesFragment : android.support.v4.app.Fragment(),
 
         mMap!!.setOnMyLocationButtonClickListener(this)
         mMap!!.isMyLocationEnabled = true
-        mMap!!.moveCamera(CameraUpdateFactory.newLatLngZoom(LAT_LNG, mMapZoom))
-        Timber.d("Map camera moved to lat: " + LAT_LNG!!.latitude)
+        mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(LAT_LNG, mMapZoom))
+
+
+        Timber.d("Map camera set to lat: " + LAT_LNG!!.latitude)
 
         val maptype = mPreferences!!.getString(getString(R.string.pref_map_type_key), getString(R.string.map_type_def_value))
 /*        if (maptype == GoogleMap.MAP_TYPE_HYBRID.toString() || maptype == GoogleMap.MAP_TYPE_SATELLITE.toString())
@@ -393,34 +397,50 @@ class TidesFragment : android.support.v4.app.Fragment(),
             mMap!!.setOnInfoWindowClickListener(this@TidesFragment)
         }
 
-        mMap!!.setOnCameraMoveListener {
-            mContainer!!.visibility = View.GONE
+        mMap!!.setOnCameraIdleListener {
+            Timber.d("map Cam Idle:\nlocationBtnCliked $locationBtnCliked \nmVisibility ${mVisibility == View.VISIBLE}")
+            mContainer.visibility = if (locationBtnCliked || mVisibility == View.VISIBLE) View.VISIBLE else View.GONE
+            locationBtnCliked = false
+        }
+
+        mMap!!.setOnCameraMoveStartedListener {
+            Timber.d("map Cam started")
+            mContainer.visibility = View.GONE
+            mVisibility = View.GONE
             mMap!!.uiSettings.isZoomControlsEnabled = true
         }
+
     }
 
     override fun onInfoWindowClick(marker: Marker) {
+        locationBtnCliked = true
+
         val editor = mPreferences!!.edit()
         editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis()))
         editor.putString(EXTRA_LATITUDE, marker.position.latitude.toString())
         editor.putString(EXTRA_LONGITUDE, marker.position.longitude.toString())
         editor.commit()
+
         updateValuesOnLocationChange(false)
         marker.hideInfoWindow()
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
         mCurrentMarker!!.showInfoWindow()
-        return false
+        return true
     }
 
+
+    private var locationBtnCliked = false
     override fun onMyLocationButtonClick(): Boolean {
+        Timber.d("onMyLocationButtonClick")
+//        mVisibility = View.VISIBLE
+        locationBtnCliked = true
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
         initLocation()
-        //onMapReady(mMap);
-        mMapZoom = MAP_ZOOM_DEFAULT.toFloat()
-        //mVisibility = View.VISIBLE;
+//        mMapZoom = MAP_ZOOM_DEFAULT
+
         return false
     }
 
@@ -435,7 +455,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
             outState.putDouble(EXTRA_LONGITUDE, LAT_LNG!!.longitude)
         }
         //outState.putString(PLACE_NAME, mLocationTextView.getText().toString());
-        outState.putInt(CONTAINER_VISIBILITY, mContainer!!.visibility)
+        outState.putInt(CONTAINER_VISIBILITY, mContainer.visibility)
         super.onSaveInstanceState(outState)
     }
 
@@ -493,8 +513,8 @@ class TidesFragment : android.support.v4.app.Fragment(),
 
     companion object {
 
-        private val LOADER_ID_TIDES = 1349
-        private val LOADER_ID_WINDS = 1350
+        private const val LOADER_ID_TIDES = 1349
+        private const val LOADER_ID_WINDS = 1350
 
         val TIDES_PROJECTION = arrayOf<String>(DbContract.TidesEntry.COLUMN_TIDES_DATE, DbContract.TidesEntry.COLUMN_WATER_LEVEL, DbContract.TidesEntry.COLUMN_LEVEL_FLAG, DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL, DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG)
         val INDEX_TIDE_DATE = 0
@@ -519,7 +539,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
         private val CONTAINER_VISIBILITY = "visibility"
 
         private val FORECAST_DAYS = 7
-        private val MAP_ZOOM_DEFAULT = 14
+        private val MAP_ZOOM_DEFAULT = 8f
         private var LAT_LNG: LatLng? = null
 
         fun newInstance(location: Location): TidesFragment {

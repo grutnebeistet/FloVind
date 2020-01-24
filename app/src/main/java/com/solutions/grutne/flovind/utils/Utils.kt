@@ -91,15 +91,15 @@ object Utils {
         val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
         val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
 
-        val year = Integer.valueOf(time.substring(0, 4))!!
-        val month = Integer.valueOf(time.substring(5, 7))!!
-        val day = Integer.valueOf(time.substring(8, 10))!!
+        val year = Integer.valueOf(time.substring(0, 4))
+        val month = Integer.valueOf(time.substring(5, 7))
+        val day = Integer.valueOf(time.substring(8, 10))
 
         if (year < currentYear) return false
         if (month < currentMonth) return false
         if (day < currentDay) return false
 
-        val lowTideHours = Integer.valueOf(time.substring(11, 13))!!
+        val lowTideHours = Integer.valueOf(time.substring(11, 13))
         val currentHours = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
         val notifyOnNext = lowTideHours >= currentHours || day > currentDay || month > currentMonth || year > currentYear
@@ -109,7 +109,7 @@ object Utils {
 
     // Returns true if the whole hour of time given (next low tide time) is after current time
     fun timeIsAfterNow(time: String): Boolean {
-        val lowTideHours = Integer.valueOf(time.substring(0, 2))!!
+        val lowTideHours = Integer.valueOf(time.substring(0, 2))
         val currentHours = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         val minutes = Calendar.getInstance().get(Calendar.MINUTE)
 
@@ -199,7 +199,7 @@ object Utils {
     }
 
     private fun getPlaceName(addresses: List<Address>): String {
-        if (addresses.size != 0) {
+        if (addresses.isNotEmpty()) {
             val subAdmin = addresses[0].subAdminArea
             val adminArea = addresses[0].adminArea
 

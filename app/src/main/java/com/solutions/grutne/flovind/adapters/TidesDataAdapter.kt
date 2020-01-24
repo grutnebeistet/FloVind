@@ -17,7 +17,7 @@ import timber.log.Timber
 import java.util.*
 
 class TidesDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<TidesDataAdapter.TdViewHolder>() {
-    internal var mCursor: Cursor? = null
+    private var mCursor: Cursor? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TdViewHolder {
         val view = LayoutInflater.from(mContext).inflate(R.layout.tide_list_item, parent, false)

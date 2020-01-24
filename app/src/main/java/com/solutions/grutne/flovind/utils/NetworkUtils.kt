@@ -5,6 +5,7 @@ import android.content.Context
 import android.location.Location
 import android.net.Uri
 import android.preference.PreferenceManager
+import com.solutions.grutne.flovind.BuildConfig
 import com.solutions.grutne.flovind.MainActivity
 import com.solutions.grutne.flovind.R
 
@@ -161,9 +162,11 @@ return requestUrl
         Timber.d("Url: " + urlString)
         val url = URL(urlString)
         val conn = url.openConnection() as HttpURLConnection
+
         conn.readTimeout = 10000
         conn.connectTimeout = 15000
         conn.requestMethod = "GET"
+        conn.setRequestProperty("User-Agent",BuildConfig.APPLICATION_ID)
         conn.doInput = true
         // Starts the query
         conn.connect()
