@@ -9,10 +9,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.solutions.grutne.flovind.R
-import com.solutions.grutne.flovind.TidesFragment
-
-
-import kotlinx.android.synthetic.main.wind_list_item.view.*
+import com.solutions.grutne.flovind.ForecastFragment
 
 
 class WindsDataAdapter(private val mContext: Context) : RecyclerView.Adapter<WindsDataAdapter.WindsViewHolder>() {
@@ -25,9 +22,9 @@ class WindsDataAdapter(private val mContext: Context) : RecyclerView.Adapter<Win
 
     override fun onBindViewHolder(holder: WindsViewHolder, position: Int) {
         mCursor!!.moveToPosition(position)
-        val time = mCursor!!.getString(TidesFragment.INDEX_WIND_TIME)
-        val speed = mCursor!!.getString(TidesFragment.INDEX_WIND_SPEED)
-        val winDir = mCursor!!.getString(TidesFragment.INDEX_WIND_DIR)
+        val time = mCursor!!.getString(ForecastFragment.INDEX_WIND_TIME)
+        val speed = mCursor!!.getString(ForecastFragment.INDEX_WIND_SPEED)
+        val winDir = mCursor!!.getString(ForecastFragment.INDEX_WIND_DIR)
 
         var dirImg = 0
         when (winDir) {

@@ -8,7 +8,7 @@
     <string name="flag_format" formatted="true" translatable="true">%s TIDE</string>
     <string name="level_format" formatted="true" translatable="true">%s cm</string>
     <string name="no_location_detected">
-        No location detected. Make sure location is enabled on the device.
+        No location detected.\nLocation Set to Oslo.
     </string>
     <string name="permission_rationale">Location permission is needed for core functionality</string>
     <string name="permission_denied_explanation">Permission was denied, but is needed for core

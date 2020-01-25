@@ -9,7 +9,6 @@ import android.support.design.widget.Snackbar
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.util.TimeUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,7 +29,7 @@ import com.solutions.grutne.flovind.adapters.WindsDataAdapter
 import com.solutions.grutne.flovind.data.DbContract
 import com.solutions.grutne.flovind.sync.FloVindSyncTask.syncData
 import com.solutions.grutne.flovind.utils.Utils
-import kotlinx.android.synthetic.main.fragment_tides.view.*
+import kotlinx.android.synthetic.main.fragment_forecast.view.*
 import kotlinx.android.synthetic.main.sun_rise_set.view.*
 import timber.log.Timber
 
@@ -38,7 +37,7 @@ import timber.log.Timber
  * Created by Adrian on 24/10/2017.
  */
 
-class TidesFragment : android.support.v4.app.Fragment(),
+class ForecastFragment : android.support.v4.app.Fragment(),
         android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor>,
         GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnInfoWindowClickListener,
@@ -75,7 +74,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
-        val editor = mPreferences!!.edit() // make member?
+//        val editor = mPreferences!!.edit() // make member?
 
         if (savedInstanceState != null) {
             Timber.d("Saved not null")
@@ -84,22 +83,22 @@ class TidesFragment : android.support.v4.app.Fragment(),
 
             val longitude = savedInstanceState.getDouble(EXTRA_LONGITUDE)
             val latitude = savedInstanceState.getDouble(EXTRA_LATITUDE)
-            editor.putString(EXTRA_LATITUDE, latitude.toString())
-            editor.putString(EXTRA_LONGITUDE, longitude.toString())
-            editor.apply()
+//            editor.putString(EXTRA_LATITUDE, latitude.toString())
+//            editor.putString(EXTRA_LONGITUDE, longitude.toString())
+//            editor.apply()
 
             LAT_LNG = LatLng(latitude, longitude)
         }
 
 
-        editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis())).apply()
+//        editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis())).apply()
         mTidesAdapter = TidesDataAdapter(context!!)
         mWindsAdapter = WindsDataAdapter(context!!)
 
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_tides, container, false)
+        val view = inflater.inflate(R.layout.fragment_forecast, container, false)
         mLocationButton = (view.findViewById<View>(Integer.parseInt("1")).parent as View).findViewById(Integer.parseInt("2"))
 
         val rlp = mLocationButton!!.layoutParams as RelativeLayout.LayoutParams
@@ -150,12 +149,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
             latitude = mLocation!!.latitude.toString()
             editor.putString(EXTRA_LONGITUDE, longitude)
             editor.putString(EXTRA_LATITUDE, latitude)
-            editor.commit()
-
-
-        } else {
-            // i statsnail satt til trondheim -
-            showSnackbar("Location") // TODO
+            editor.apply()
         }
         updateValuesOnLocationChange(useHomeLocation)
     }
@@ -297,17 +291,17 @@ class TidesFragment : android.support.v4.app.Fragment(),
                     val time = cursor.getString(INDEX_RISE_SET_TIME)
                     val date = cursor.getString(INDEX_RISE_SET_DATE)
 
-                    when(type){
-                        "sunrise" ->{
+                    when (type) {
+                        "sunrise" -> {
                             mContainer.sunrise_set.rising_time.text = Utils.getFormattedTime(time)
                         }
-                        "sunset" ->{
+                        "sunset" -> {
                             mContainer.sunrise_set.setting_time.text = Utils.getFormattedTime(time)
                         }
-                        "moonrise" ->{
+                        "moonrise" -> {
                             mContainer.moonrise_set.rising_time.text = Utils.getFormattedTime(time)
                         }
-                        "moonset" ->{
+                        "moonset" -> {
                             mContainer.moonrise_set.setting_time.text = Utils.getFormattedTime(time)
                         }
                     }
@@ -328,6 +322,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
                         mErrorTextView.visibility = View.VISIBLE
                         mErrorTextView.setText(R.string.connection_error)
                         mNextDay.visibility = View.INVISIBLE
+                        mTidesAdapter!!.swapCursor(cursor)
                     }
                     in 1..2 -> {// cursor.count <= 2) {
                         Timber.d("onLoadFinished Tides 2: count: " + cursor?.count)
@@ -335,7 +330,6 @@ class TidesFragment : android.support.v4.app.Fragment(),
                         cursor?.moveToFirst()
                         mErrorTextView.visibility = View.VISIBLE
                         mErrorTextView.text = cursor?.getString(INDEX_ERROR)
-                        //  Toast.makeText(getActivity(), "Error: " + cursor.getString(INDEX_ERROR), Toast.LENGTH_SHORT).show();
                         mNextDay.visibility = View.INVISIBLE
                         mTidesAdapter!!.swapCursor(null)
                     }
@@ -424,7 +418,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
                     .title(getString(R.string.conditions_label))
                     .snippet(place))
             mCurrentMarker!!.showInfoWindow()
-            mMap!!.setOnInfoWindowClickListener(this@TidesFragment)
+            mMap!!.setOnInfoWindowClickListener(this@ForecastFragment)
         }
 
         mMap!!.setOnCameraIdleListener {
@@ -468,7 +462,8 @@ class TidesFragment : android.support.v4.app.Fragment(),
         locationBtnCliked = true
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
-        initLocation()
+//        initLocation()
+        updateValuesOnLocationChange(homeLocation = true)
 //        mMapZoom = MAP_ZOOM_DEFAULT
 
         return false
@@ -562,9 +557,9 @@ class TidesFragment : android.support.v4.app.Fragment(),
         const val INDEX_WIND_DIR = 4
 
         val RISE_SET_PROJECTION = arrayOf(DbContract.RiseSetEntry.COLUMN_RISE_SET_TYPE, DbContract.RiseSetEntry.COLUMN_RISE_SET_DATE, DbContract.RiseSetEntry.COLUMN_TIME_OF_RISE_SET)
-        const val  INDEX_RISE_SET_TYPE = 0
-        const val  INDEX_RISE_SET_DATE = 1
-        const val  INDEX_RISE_SET_TIME = 2
+        const val INDEX_RISE_SET_TYPE = 0
+        const val INDEX_RISE_SET_DATE = 1
+        const val INDEX_RISE_SET_TIME = 2
 
         const val EXTRA_TIDE_QUERY_DATE = "tides_date"
         private const val SELECTED_STYLE = "selected_style"
@@ -577,10 +572,10 @@ class TidesFragment : android.support.v4.app.Fragment(),
         private const val MAP_ZOOM_DEFAULT = 8f
         private var LAT_LNG: LatLng? = null
 
-        fun newInstance(location: Location): TidesFragment {
+        fun newInstance(location: Location): ForecastFragment {
             val args = Bundle()
             args.putParcelable(LOCATION, location)
-            val f = TidesFragment()
+            val f = ForecastFragment()
             f.arguments = args
 
             return f

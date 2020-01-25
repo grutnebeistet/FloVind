@@ -5,6 +5,7 @@
     android:id="@+id/main_activity_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FFFFFF"
     tools:context="com.solutions.grutne.flovind.MainActivity">
 
     <LinearLayout
@@ -32,14 +33,25 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:contentDescription="@string/app_name"
-                android:src="@drawable/moonset" />
+                android:src="@mipmap/ic_launcher"
+                android:visibility="gone" />
+
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/app_name"
-                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-                android:textColor="@color/cardview_light_background" />
+                android:fontFamily="@font/airways"
+                android:text="_Flo"
+                android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+                android:textColor="@color/ocean_blue" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/airways"
+                android:text="Vind }"
+                android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+                android:textColor="@color/wind_green" />
 
 
         </android.support.v7.widget.Toolbar>

@@ -2,7 +2,6 @@ package com.solutions.grutne.flovind.adapters
 
 import android.content.Context
 import android.database.Cursor
-import android.media.Image
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -10,10 +9,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.solutions.grutne.flovind.R
-import com.solutions.grutne.flovind.TidesFragment
+import com.solutions.grutne.flovind.ForecastFragment
 
-import kotlinx.android.synthetic.main.tide_list_item.view.*
-import timber.log.Timber
 import java.util.*
 
 class TidesDataAdapter(private var mContext: Context) : RecyclerView.Adapter<TidesDataAdapter.TdViewHolder>() {
@@ -27,9 +24,9 @@ class TidesDataAdapter(private var mContext: Context) : RecyclerView.Adapter<Tid
     override fun onBindViewHolder(holder: TdViewHolder, position: Int) {
         mCursor!!.moveToPosition(position)
 
-        var flag = mCursor!!.getString(TidesFragment.INDEX_FLAG)
-        val time = mCursor!!.getString(TidesFragment.INDEX_LEVEL_TIME)
-        val level = mContext.getString(R.string.level_format, mCursor!!.getString(TidesFragment.INDEX_TIDE_LEVEL))
+        var flag = mCursor!!.getString(ForecastFragment.INDEX_FLAG)
+        val time = mCursor!!.getString(ForecastFragment.INDEX_LEVEL_TIME)
+        val level = mContext.getString(R.string.level_format, mCursor!!.getString(ForecastFragment.INDEX_TIDE_LEVEL))
 
         if (position % 2 != 0) {
             holder.mDivider.visibility = View.INVISIBLE

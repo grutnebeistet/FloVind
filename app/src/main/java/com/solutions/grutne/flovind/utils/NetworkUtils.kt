@@ -76,7 +76,6 @@ object NetworkUtils {
     fun buildRiseSetRequestUrl(context: Context, homeLocation: Boolean): String {
         val fromDate = Utils.getDate(System.currentTimeMillis())
 
-//        +03:00
         val offsetFromUtc = TimeUnit.MILLISECONDS.toHours((TimeZone.getDefault().getOffset(Date().time)).toLong()).toInt()
         val offset = "${TimeZoneFormat.getInstance(Locale.getDefault()).formatOffsetISO8601Extended(offsetFromUtc, false, true, true)}:00"
 

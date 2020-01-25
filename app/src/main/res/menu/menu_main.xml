@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:myapp="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/action_settings"
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@mipmap/ic_settings"
         android:title="@string/settings"
-        myapp:showAsAction="never" />
+        myapp:showAsAction="always" />
+
 </menu>

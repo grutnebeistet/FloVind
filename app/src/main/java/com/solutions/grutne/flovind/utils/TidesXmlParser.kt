@@ -5,7 +5,7 @@ import android.content.Context
 import android.preference.PreferenceManager
 import android.util.Xml
 import com.solutions.grutne.flovind.MainActivity
-import com.solutions.grutne.flovind.TidesFragment.Companion.EXTRA_TIDE_QUERY_DATE
+import com.solutions.grutne.flovind.ForecastFragment.Companion.EXTRA_TIDE_QUERY_DATE
 import com.solutions.grutne.flovind.data.DbContract
 import com.solutions.grutne.flovind.models.TidesData
 

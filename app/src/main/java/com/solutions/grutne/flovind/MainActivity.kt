@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
+import android.location.LocationProvider
 import android.net.Uri
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -21,6 +22,8 @@ import android.support.design.widget.Snackbar
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.solutions.grutne.flovind.sync.SyncUtils
+import com.solutions.grutne.flovind.utils.Utils
+import kotlinx.android.synthetic.main.widget_tides.*
 
 
 internal class MainActivity : AppCompatActivity() {
@@ -30,7 +33,7 @@ internal class MainActivity : AppCompatActivity() {
      */
     private var mFusedLocationClient: FusedLocationProviderClient? = null
     private var mLastLocation: Location? = null
-    private  val TAG = MainActivity::class.java.simpleName
+    private val TAG = MainActivity::class.java.simpleName
 
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
 
@@ -42,7 +45,7 @@ internal class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         Timber.plant(Timber.DebugTree())
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
-       // toolbar.setBackgroundColor(Color.BLUE)
+        // toolbar.setBackgroundColor(Color.BLUE)
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayShowTitleEnabled(false)
 
@@ -70,34 +73,52 @@ internal class MainActivity : AppCompatActivity() {
 
 
     private fun getLastLocation() {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val editor = preferences.edit()
         mFusedLocationClient!!.lastLocation
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful && task.result != null) {
                         mLastLocation = task.result
-                        val preferences = PreferenceManager.getDefaultSharedPreferences(this@MainActivity)
-                        val editor = preferences.edit()
+
+
                         // TODO  convert to doubleToRawLongBits
                         /*            editor.putString(EXTRA_LATITUDE, String.valueOf(mLastLocation.getLatitude()));
                         editor.putString(EXTRA_LONGITUDE, String.valueOf(mLastLocation.getLongitude()));*/
-                        editor.putString(HOME_LAT, task.result.latitude.toString())
-                        editor.putString(HOME_LON, task.result.longitude.toString())
-                        editor.apply()
+//                        editor.putString(HOME_LAT, task.result.latitude.toString())
+//                        editor.putString(HOME_LON, task.result.longitude.toString())
+//                        editor.apply()
 
                         SyncUtils.initialize(this@MainActivity)
 
-                        // for now, if location then start tidesfragment
-                        val tFrag = TidesFragment.newInstance(task.result)
-                        val transaction = supportFragmentManager.beginTransaction()
-                        transaction.add(R.id.frag_container, tFrag)
-                        transaction.commit()
-
                     } else {
                         showSnackBar(getString(R.string.no_location_detected))
-                        // TODO show each station on the map
                     }
+                    if (mLastLocation == null)
+                        mLastLocation = getDefaultLocation()
+
+
+                    editor.putString(HOME_LAT, mLastLocation!!.latitude.toString())
+                    editor.putString(HOME_LON, mLastLocation!!.longitude.toString())
+//                    editor.apply()
+                    editor.putString(EXTRA_LATITUDE, mLastLocation!!.latitude.toString())
+                    editor.putString(EXTRA_LONGITUDE, mLastLocation!!.longitude.toString())
+                    editor.putString(ForecastFragment.EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis()))
+                    editor.apply()
+
+                    val tFrag = ForecastFragment.newInstance(mLastLocation!!)
+                    val transaction = supportFragmentManager.beginTransaction()
+                    transaction.add(R.id.frag_container, tFrag)
+                    transaction.commit()
                 }
     }
 
+    // Coordinates for Oslo
+    private fun getDefaultLocation(): Location {
+        val location = Location("")
+        location.latitude = 59.9139
+        location.longitude = 10.7522
+        return location
+    }
 
     private fun showSnackBar(mainTextStringId: Int, actionStringId: Int,
                              listener: View.OnClickListener) {
@@ -172,7 +193,7 @@ internal class MainActivity : AppCompatActivity() {
         Log.i(TAG, "onRequestPermissionResult")
         if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
 
-            when{
+            when {
                 grantResults.isEmpty() -> {
                     // If user interaction was interrupted, the permission request is cancelled and you
                     // receive empty arrays.
