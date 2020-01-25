@@ -24,7 +24,7 @@ import timber.log.Timber
  */
 
 class TidesXmlParser {
-    internal var mContext: Context? = null
+    private var mContext: Context? = null
 
     @Throws(XmlPullParserException::class, IOException::class)
     fun parseNearbyStation(context: Context, `in`: InputStream): Array<ContentValues?>? {

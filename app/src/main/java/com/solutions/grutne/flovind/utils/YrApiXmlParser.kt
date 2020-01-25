@@ -3,9 +3,11 @@ package com.solutions.grutne.flovind.utils
 import android.content.ContentValues
 import android.util.Xml
 import com.solutions.grutne.flovind.data.DbContract
+import com.solutions.grutne.flovind.utils.NetworkUtils.NUMBER_OF_DAYS
 
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
+import timber.log.Timber
 
 import java.io.IOException
 import java.io.InputStream
@@ -13,17 +15,77 @@ import java.io.InputStream
 class YrApiXmlParser {
 
     @Throws(XmlPullParserException::class, IOException::class)
-    fun parseWinds(`in`: InputStream): Array<ContentValues?>? {
-        try {
+    fun parseRiseSets(inputStream: InputStream): Array<ContentValues?>? {
+        inputStream.use {
             val parser = Xml.newPullParser()
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
-            parser.setInput(`in`, null)
+            parser.setInput(inputStream, null)
+            parser.nextTag()
+
+//            val k:Array<ContentValues?>? = readRiseSetXml(parser)
+//
+//            for (x in k!!.iterator()){
+//                k.get()
+//            }
+
+            return readRiseSetXml(parser)
+        }
+    }
+
+    @Throws(XmlPullParserException::class, IOException::class)
+    private fun readRiseSetXml(parser: XmlPullParser): Array<ContentValues?>? {
+        var evType = parser.eventType
+        val contentValues = arrayOfNulls<ContentValues>(NUMBER_OF_DAYS.toInt() * 4)
+        var name: String
+        var index = 0
+        while (evType != XmlPullParser.END_DOCUMENT) {
+            while (parser.next() != XmlPullParser.END_TAG) {
+                if (parser.eventType != XmlPullParser.START_TAG) continue
+                name = parser.name
+                if ("location" == name) {
+                    while (parser.next() != XmlPullParser.END_TAG) {
+                        if (parser.eventType != XmlPullParser.START_TAG)
+                            continue
+                        name = parser.name
+                        if ("time" == name) {
+                            val date = parser.getAttributeValue(parser.namespace, "date")
+                            while (parser.next() != XmlPullParser.END_TAG) {
+                                if (parser.eventType != XmlPullParser.START_TAG)
+                                    continue
+                                val riseSet = ContentValues()
+                                name = parser.name
+
+                                if (name == "sunrise" || name == "sunset" || name == "moonrise" || name == "moonset") {
+                                    val time = parser.getAttributeValue(parser.namespace, "time")
+                                    riseSet.put(DbContract.RiseSetEntry.COLUMN_TIME_OF_RISE_SET, time)
+                                    riseSet.put(DbContract.RiseSetEntry.COLUMN_RISE_SET_DATE, date)
+                                    riseSet.put(DbContract.RiseSetEntry.COLUMN_RISE_SET_TYPE, name)
+
+                                    contentValues[index] = riseSet
+                                    index++
+
+                                }
+
+                                parser.nextTag()
+                            }
+                        }
+                    }
+                }
+            }
+            evType = parser.next()
+        }
+        return contentValues
+    }
+
+    @Throws(XmlPullParserException::class, IOException::class)
+    fun parseWinds(inputStream: InputStream): Array<ContentValues?>? {
+        inputStream.use {
+            val parser = Xml.newPullParser()
+            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
+            parser.setInput(inputStream, null)
             parser.nextTag()
 
             return readWindsXml(parser)
-
-        } finally {
-            `in`.close()
         }
     }
 
@@ -31,18 +93,18 @@ class YrApiXmlParser {
     private fun readWindsXml(parser: XmlPullParser): Array<ContentValues?>? {
         var evType = parser.eventType
         val windsValues = arrayOfNulls<ContentValues>(WINDS_MAX_SIZE)
-        var name = ""
+        var name: String
         var index = 0
         while (evType != XmlPullParser.END_DOCUMENT) {
             while (parser.next() != XmlPullParser.END_TAG) {
                 if (parser.eventType != XmlPullParser.START_TAG) continue
                 name = parser.name
                 if ("time" == name) {
-                    val time = parser.getAttributeValue(1)
-
-                    var windDir = ""
-                    var winDirDeg = ""
-                    var windSpeed = ""
+//                    val time = parser.getAttributeValue(1)
+                    val time = parser.getAttributeValue(parser.namespace, "from")
+                    var windDir: String
+                    var winDirDeg: String
+                    var windSpeed: String
 
                     while (parser.next() != XmlPullParser.END_TAG) {
                         if (parser.eventType != XmlPullParser.START_TAG)
@@ -83,7 +145,6 @@ class YrApiXmlParser {
                     }
                 }
             }
-            //Timber.d("YrParse get name: " + parser.getName());
             evType = parser.next()
         }
         return windsValues
@@ -91,6 +152,6 @@ class YrApiXmlParser {
 
     companion object {
         private val ns: String? = null
-        private val WINDS_MAX_SIZE = 89
+        private const val WINDS_MAX_SIZE = 89
     }
 }

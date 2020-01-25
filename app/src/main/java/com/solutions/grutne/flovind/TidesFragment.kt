@@ -9,6 +9,7 @@ import android.support.design.widget.Snackbar
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.TimeUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,7 +30,8 @@ import com.solutions.grutne.flovind.adapters.WindsDataAdapter
 import com.solutions.grutne.flovind.data.DbContract
 import com.solutions.grutne.flovind.sync.FloVindSyncTask.syncData
 import com.solutions.grutne.flovind.utils.Utils
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_tides.view.*
+import kotlinx.android.synthetic.main.sun_rise_set.view.*
 import timber.log.Timber
 
 /**
@@ -166,7 +168,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
             Timber.d("saved == null")
             initLocation()
         } else
-            restartLoader(false)
+            restartLoaders(false)
 
         mNextDay.setOnClickListener(View.OnClickListener {
             val currentDate = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
@@ -180,8 +182,8 @@ class TidesFragment : android.support.v4.app.Fragment(),
                 } else {
                     mPreferences!!.edit().putString(EXTRA_TIDE_QUERY_DATE, tomorrow).apply()
                     mDateTimeTextView.text = (Utils.getPrettyDate(Utils.getDateInMillisec(tomorrow))) // TODO not very efficient, lag egen metode
-                    activity!!.supportLoaderManager.restartLoader(LOADER_ID_TIDES, null, this@TidesFragment)
-                    activity!!.supportLoaderManager.restartLoader(LOADER_ID_WINDS, null, this@TidesFragment)
+
+                    restartLoaders(homeLocation = false)
                 }
             } catch (e: ParseException) {
                 Timber.e("failed to increase date")
@@ -197,8 +199,8 @@ class TidesFragment : android.support.v4.app.Fragment(),
                 val yesterday = Utils.getDateMinusOne(currentDate)
                 mPreferences!!.edit().putString(EXTRA_TIDE_QUERY_DATE, yesterday).apply()
                 mDateTimeTextView.text = (Utils.getPrettyDate(Utils.getDateInMillisec(yesterday)))
-                activity!!.supportLoaderManager.restartLoader(LOADER_ID_TIDES, null, this@TidesFragment)
-                activity!!.supportLoaderManager.restartLoader(LOADER_ID_WINDS, null, this@TidesFragment)
+
+                restartLoaders(homeLocation = false)
             } catch (e: ParseException) {
                 Timber.e("failed to decrease date")
                 e.printStackTrace()
@@ -223,7 +225,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
         }
     }
 
-    private fun restartLoader(homeLocation: Boolean) {
+    private fun restartLoaders(homeLocation: Boolean) {
         try {
             mLocationTextView.text = Utils.getPlaceName(context!!, homeLocation)
 //            mLocationTextView!!.text = (Utils.getAccuratePlaceName(context!!, homeLocation))
@@ -243,6 +245,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
 
         activity!!.supportLoaderManager.restartLoader(LOADER_ID_TIDES, null, this)
         activity!!.supportLoaderManager.restartLoader(LOADER_ID_WINDS, null, this)
+        activity!!.supportLoaderManager.restartLoader(LOADER_ID_RISE_SET, null, this)
     }
 
 
@@ -253,6 +256,12 @@ class TidesFragment : android.support.v4.app.Fragment(),
         val selectionArgs = arrayOf(mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
                 Utils.getDate(System.currentTimeMillis())))
         when (i) {
+            LOADER_ID_RISE_SET -> {
+                sortOrder = DbContract.RiseSetEntry.COLUMN_RISE_SET_TYPE + " DESC"
+                selection = DbContract.RiseSetEntry.COLUMN_RISE_SET_DATE + "=?"
+                return android.support.v4.content.CursorLoader(activity!!, DbContract.RiseSetEntry.CONTENT_URI_RISE_SET,
+                        RISE_SET_PROJECTION, selection, selectionArgs, sortOrder)
+            }
             LOADER_ID_TIDES -> {
                 sortOrder = DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL + " ASC"
                 selection = DbContract.TidesEntry.COLUMN_TIDES_DATE + "=?"
@@ -273,11 +282,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
     }
 
     override fun onLoadFinished(loader: android.support.v4.content.Loader<Cursor>, cursor: Cursor?) {
-
         mMap!!.uiSettings.isZoomControlsEnabled = mContainer.visibility != View.VISIBLE
-
-//        val bounds = LatLngBounds(LatLng(57.817944, 7.600304), LatLng(71.171213, 25.793040))
-//        mMap!!.setLatLngBoundsForCameraTarget(bounds)
 
         val currentDate = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
                 Utils.getDate(System.currentTimeMillis()))
@@ -285,6 +290,31 @@ class TidesFragment : android.support.v4.app.Fragment(),
             mPrevDay.visibility = View.INVISIBLE
         }
         when (loader.id) {
+            LOADER_ID_RISE_SET -> {
+                Timber.d("Rise Set cursor: ${cursor?.count}")
+                while (cursor!!.moveToNext()) {
+                    val type = cursor.getString(INDEX_RISE_SET_TYPE)
+                    val time = cursor.getString(INDEX_RISE_SET_TIME)
+                    val date = cursor.getString(INDEX_RISE_SET_DATE)
+
+                    when(type){
+                        "sunrise" ->{
+                            mContainer.sunrise_set.rising_time.text = Utils.getFormattedTime(time)
+                        }
+                        "sunset" ->{
+                            mContainer.sunrise_set.setting_time.text = Utils.getFormattedTime(time)
+                        }
+                        "moonrise" ->{
+                            mContainer.moonrise_set.rising_time.text = Utils.getFormattedTime(time)
+                        }
+                        "moonset" ->{
+                            mContainer.moonrise_set.setting_time.text = Utils.getFormattedTime(time)
+                        }
+                    }
+
+
+                }
+            }
             LOADER_ID_WINDS -> {
                 Timber.d("onLoadFinished Winds: count: " + cursor?.count)
                 mWindsAdapter!!.swapCursor(cursor)
@@ -333,7 +363,7 @@ class TidesFragment : android.support.v4.app.Fragment(),
     private fun updateValuesOnLocationChange(homeLocation: Boolean) {
         val thread = Thread(Runnable { syncData(context!!, homeLocation) })
         thread.start()
-        restartLoader(homeLocation)
+        restartLoaders(homeLocation)
 
     }
 
@@ -515,31 +545,36 @@ class TidesFragment : android.support.v4.app.Fragment(),
 
         private const val LOADER_ID_TIDES = 1349
         private const val LOADER_ID_WINDS = 1350
+        private const val LOADER_ID_RISE_SET = 1351
 
-        val TIDES_PROJECTION = arrayOf<String>(DbContract.TidesEntry.COLUMN_TIDES_DATE, DbContract.TidesEntry.COLUMN_WATER_LEVEL, DbContract.TidesEntry.COLUMN_LEVEL_FLAG, DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL, DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG)
-        val INDEX_TIDE_DATE = 0
-        val INDEX_TIDE_LEVEL = 1
-        val INDEX_LEVEL_TIME = 3
-        val INDEX_FLAG = 2
-        val INDEX_ERROR = 4
+        val TIDES_PROJECTION = arrayOf(DbContract.TidesEntry.COLUMN_TIDES_DATE, DbContract.TidesEntry.COLUMN_WATER_LEVEL, DbContract.TidesEntry.COLUMN_LEVEL_FLAG, DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL, DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG)
+        const val INDEX_TIDE_DATE = 0
+        const val INDEX_TIDE_LEVEL = 1
+        const val INDEX_LEVEL_TIME = 3
+        const val INDEX_FLAG = 2
+        const val INDEX_ERROR = 4
 
-        val WINDS_PROJECTION = arrayOf<String>(DbContract.WindsEntry.COLUMN_WINDS_DATE, DbContract.WindsEntry.COLUMN_TIME_OF_WIND, DbContract.WindsEntry.COLUMN_WIND_DIR_DEG, DbContract.WindsEntry.COLUMN_WIND_SPEED, DbContract.WindsEntry.COLUMN_WIND_DIRECTION)
-        val INDEX_WIND_DATE = 0
-        val INDEX_WIND_TIME = 1
-        val INDEX_WIND_DIR_DEG = 2
-        val INDEX_WIND_SPEED = 3
-        val INDEX_WIND_DIR = 4
+        val WINDS_PROJECTION = arrayOf(DbContract.WindsEntry.COLUMN_WINDS_DATE, DbContract.WindsEntry.COLUMN_TIME_OF_WIND, DbContract.WindsEntry.COLUMN_WIND_DIR_DEG, DbContract.WindsEntry.COLUMN_WIND_SPEED, DbContract.WindsEntry.COLUMN_WIND_DIRECTION)
+        const val INDEX_WIND_DATE = 0
+        const val INDEX_WIND_TIME = 1
+        const val INDEX_WIND_DIR_DEG = 2
+        const val INDEX_WIND_SPEED = 3
+        const val INDEX_WIND_DIR = 4
 
+        val RISE_SET_PROJECTION = arrayOf(DbContract.RiseSetEntry.COLUMN_RISE_SET_TYPE, DbContract.RiseSetEntry.COLUMN_RISE_SET_DATE, DbContract.RiseSetEntry.COLUMN_TIME_OF_RISE_SET)
+        const val  INDEX_RISE_SET_TYPE = 0
+        const val  INDEX_RISE_SET_DATE = 1
+        const val  INDEX_RISE_SET_TIME = 2
 
-        val EXTRA_TIDE_QUERY_DATE = "tides_date"
-        private val SELECTED_STYLE = "selected_style"
-        private val MAP_ZOOM = "map_zoom"
-        private val PLACE_NAME = "location_name"
-        private val LOCATION = "location"
-        private val CONTAINER_VISIBILITY = "visibility"
+        const val EXTRA_TIDE_QUERY_DATE = "tides_date"
+        private const val SELECTED_STYLE = "selected_style"
+        private const val MAP_ZOOM = "map_zoom"
+        private const val PLACE_NAME = "location_name"
+        private const val LOCATION = "location"
+        private const val CONTAINER_VISIBILITY = "visibility"
 
-        private val FORECAST_DAYS = 7
-        private val MAP_ZOOM_DEFAULT = 8f
+        private const val FORECAST_DAYS = 7
+        private const val MAP_ZOOM_DEFAULT = 8f
         private var LAT_LNG: LatLng? = null
 
         fun newInstance(location: Location): TidesFragment {

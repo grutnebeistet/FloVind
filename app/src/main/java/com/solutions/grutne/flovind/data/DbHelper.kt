@@ -25,20 +25,30 @@ class TidesDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME,
                 DbContract.WindsEntry.COLUMN_WIND_SPEED + " TEXT " +
                 ");"
 
+        val SQL_CREATE_RISE_SET_TABLE = "CREATE TABLE ${DbContract.RiseSetEntry.TABLE_RISE_SET} (" +
+                "${DbContract.RiseSetEntry.COLUMN_RISE_SET_ID} INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "${DbContract.RiseSetEntry.COLUMN_RISE_SET_TYPE} TEXT, " +
+                "${DbContract.RiseSetEntry.COLUMN_RISE_SET_DATE} TEXT, " +
+                "${DbContract.RiseSetEntry.COLUMN_TIME_OF_RISE_SET} TEXT " +
+                ");"
+
         sqLiteDatabase.execSQL(SQL_CREATE_TIDES_TABLE)
         sqLiteDatabase.execSQL(SQL_CREATE_WINDS_TABLE)
+        sqLiteDatabase.execSQL(SQL_CREATE_RISE_SET_TABLE)
+
     }
 
     override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + DbContract.TidesEntry.TABLE_TIDES)
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + DbContract.WindsEntry.TABLE_WINDS)
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + DbContract.RiseSetEntry.TABLE_RISE_SET)
         onCreate(sqLiteDatabase)
     }
 
     companion object {
 
-        val DATABASE_NAME = "weather.db"
+        const val DATABASE_NAME = "weather.db"
 
-        val DATABASE_VERSION = 7
+        const val DATABASE_VERSION = 8
     }
 }

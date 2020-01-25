@@ -15,15 +15,15 @@ import com.solutions.grutne.flovind.TidesFragment
 import kotlinx.android.synthetic.main.wind_list_item.view.*
 
 
-class WindsDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<WindsDataAdapter.TdViewHolder>() {
-    internal var mCursor: Cursor? = null
+class WindsDataAdapter(private val mContext: Context) : RecyclerView.Adapter<WindsDataAdapter.WindsViewHolder>() {
+    private var mCursor: Cursor? = null
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TdViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WindsViewHolder {
         val view = LayoutInflater.from(mContext).inflate(R.layout.wind_list_item, parent, false)
-        return TdViewHolder(view)
+        return WindsViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: TdViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: WindsViewHolder, position: Int) {
         mCursor!!.moveToPosition(position)
         val time = mCursor!!.getString(TidesFragment.INDEX_WIND_TIME)
         val speed = mCursor!!.getString(TidesFragment.INDEX_WIND_SPEED)
@@ -41,9 +41,9 @@ class WindsDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<Wi
             "SW" -> dirImg = R.drawable.south_west
         }
 
-        holder.mSpeed!!.text = speed + " m/s"
-        holder.mTime!!.text = time
-        holder.mWinDirImg!!.setImageResource(dirImg)
+        holder.mSpeed.text = "$speed m/s"
+        holder.mTime.text = time
+        holder.mWinDirImg.setImageResource(dirImg)
     }
 
     fun swapCursor(newCursor: Cursor?) {
@@ -55,13 +55,10 @@ class WindsDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<Wi
         return if (null == mCursor) 0 else mCursor!!.count
     }
 
-     inner class TdViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        var mSpeed = view.findViewById<TextView>(R.id.wind_speed)
-        var mTime = view.findViewById<TextView>(R.id.wind_time)
-        var mWinDirImg = view.findViewById<ImageView>(R.id.wind_dir_img)
+    inner class WindsViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        var mSpeed: TextView = view.findViewById(R.id.wind_speed)
+        var mTime: TextView = view.findViewById(R.id.wind_time)
+        var mWinDirImg: ImageView = view.findViewById(R.id.wind_dir_img)
 
-        init {
-          //  ButterKnife.bind(this, view)
-        }
     }
 }

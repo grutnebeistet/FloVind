@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.tide_list_item.view.*
 import timber.log.Timber
 import java.util.*
 
-class TidesDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<TidesDataAdapter.TdViewHolder>() {
+class TidesDataAdapter(private var mContext: Context) : RecyclerView.Adapter<TidesDataAdapter.TdViewHolder>() {
     private var mCursor: Cursor? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TdViewHolder {
@@ -26,22 +26,18 @@ class TidesDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<Ti
 
     override fun onBindViewHolder(holder: TdViewHolder, position: Int) {
         mCursor!!.moveToPosition(position)
-        var flag: String? = null
-        var time: String? = null
-        var level: String? = null
 
-        Timber.d("LANAUGE: " + Locale.getDefault().displayLanguage)
-        flag = mCursor!!.getString(TidesFragment.INDEX_FLAG)
-        time = mCursor!!.getString(TidesFragment.INDEX_LEVEL_TIME)
-        level = mContext.getString(R.string.level_format, mCursor!!.getString(TidesFragment.INDEX_TIDE_LEVEL))
+        var flag = mCursor!!.getString(TidesFragment.INDEX_FLAG)
+        val time = mCursor!!.getString(TidesFragment.INDEX_LEVEL_TIME)
+        val level = mContext.getString(R.string.level_format, mCursor!!.getString(TidesFragment.INDEX_TIDE_LEVEL))
 
         if (position % 2 != 0) {
-            holder.mDivider!!.visibility = View.INVISIBLE
+            holder.mDivider.visibility = View.INVISIBLE
         }
         if (flag == "high")
-            holder.mFlagImg!!.setImageResource(R.drawable.high_tide)
+            holder.mFlagImg.setImageResource(R.drawable.high_tide)
         else if (flag == "low")
-            holder.mFlagImg!!.setImageResource(R.drawable.low_tide)
+            holder.mFlagImg.setImageResource(R.drawable.low_tide)
 
         flag = if (Locale.getDefault().displayLanguage == "norsk bokmål")
             if (flag == "high")
@@ -49,9 +45,9 @@ class TidesDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<Ti
             else "Lavvann"
         else mContext.getString(R.string.flag_format, flag)
 
-        holder.mFlag!!.text = flag
-        holder.mTime!!.text = time
-        holder.mLevel!!.text = level
+        holder.mFlag.text = flag
+        holder.mTime.text = time
+        holder.mLevel.text = level
     }
 
     fun swapCursor(newCursor: Cursor?) {
@@ -64,12 +60,10 @@ class TidesDataAdapter(internal var mContext: Context) : RecyclerView.Adapter<Ti
     }
 
     inner class TdViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        var mFlag = view.findViewById<TextView>(R.id.tide_item_flag)
-        var mTime = view.findViewById<TextView>(R.id.tide_item_time)
-        var mLevel = view.findViewById<TextView>(R.id.tide_item_value)
-        var mDivider = view.findViewById<View>(R.id.divider_list_item)
-        var mFlagImg = view.findViewById<ImageView>(R.id.tide_item_flag_img)
-
-        // Trengs init?
+        var mFlag: TextView = view.findViewById(R.id.tide_item_flag)
+        var mTime: TextView = view.findViewById(R.id.tide_item_time)
+        var mLevel: TextView = view.findViewById(R.id.tide_item_value)
+        var mDivider: View = view.findViewById(R.id.divider_list_item)
+        var mFlagImg: ImageView = view.findViewById(R.id.tide_item_flag_img)
     }
 }

@@ -22,21 +22,28 @@ object FloVindSyncTask {
             val windsData = NetworkUtils.loadWindsXml(windsRequestUrl)
 
             val tidesRequestUrl = NetworkUtils.buildTidesRequestUrl(context, homeLocation)
-            Timber.d("Tide URL $tidesRequestUrl")
-            val tidesData = NetworkUtils.loadNearbyXml(context, tidesRequestUrl)
+            val tidesData = NetworkUtils.loadTidesXml(context, tidesRequestUrl)
+
+            val riseSetRequestUrl = NetworkUtils.buildRiseSetRequestUrl(context, homeLocation)
+            val riseSetData = NetworkUtils.loadRiseSetXml(riseSetRequestUrl)
 
             val resolver = context.contentResolver
             if (null != tidesData && tidesData.isNotEmpty()) {
                 resolver.delete(
                         DbContract.TidesEntry.CONTENT_URI_TIDES, null, null)
 
-                resolver.bulkInsert(DbContract.TidesEntry.CONTENT_URI_TIDES, tidesData!!)
+                resolver.bulkInsert(DbContract.TidesEntry.CONTENT_URI_TIDES, tidesData)
             }
             if (null != windsData && windsData.isNotEmpty()) {
                 resolver.delete(
                         DbContract.WindsEntry.CONTENT_URI_WINDS, null, null
                 )
-                resolver.bulkInsert(DbContract.WindsEntry.CONTENT_URI_WINDS, windsData!!)
+                resolver.bulkInsert(DbContract.WindsEntry.CONTENT_URI_WINDS, windsData)
+            }
+            if (!riseSetData.isNullOrEmpty()) {
+                resolver.delete(
+                        DbContract.RiseSetEntry.CONTENT_URI_RISE_SET, null, null)
+                resolver.bulkInsert(DbContract.RiseSetEntry.CONTENT_URI_RISE_SET, riseSetData)
             }
 
         } catch (e: Exception) {
