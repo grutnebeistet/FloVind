@@ -1,11 +1,9 @@
 package com.solutions.grutne.flovind.data
 
-import android.content.ContentProvider
-import android.content.ContentUris
-import android.content.ContentValues
-import android.content.UriMatcher
+import android.content.*
 import android.database.Cursor
 import android.net.Uri
+import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 
 import timber.log.Timber
@@ -142,8 +140,8 @@ class WeatherDataProvider : ContentProvider() {
         }
         Log.i(LOG_TAG, "inserted: $rowsInserted rows")
         return rowsInserted
-
     }
+
 
     override fun getType(uri: Uri): String? {
         val match = mUriMatcher.match(uri)

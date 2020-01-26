@@ -8,6 +8,7 @@
     <string name="no_location_detected">
         Ingen lokasjon funnet.\nOslo ble satt som standardlokasjon.
     </string>
+    <string name="address_unavailable" translatable="true">Addresse utilgjengelig</string>
     <string name="permission_rationale">Lokasjonstillatelse er nødvendig for at applikasjonen skal fungere optimalt.</string>
     <string name="permission_denied_explanation">Tillatelse ble nektet, men er nødvendig for kjernefunksjonalitet.</string>
     <string name="settings">Innstillinger</string>

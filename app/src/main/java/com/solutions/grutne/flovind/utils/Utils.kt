@@ -5,12 +5,14 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.LocationManager
 import android.net.ConnectivityManager
+import android.os.RemoteException
 import android.preference.PreferenceManager
 import com.google.android.gms.maps.model.LatLng
 import com.solutions.grutne.flovind.MainActivity.Companion.EXTRA_LATITUDE
 import com.solutions.grutne.flovind.MainActivity.Companion.EXTRA_LONGITUDE
 import com.solutions.grutne.flovind.MainActivity.Companion.HOME_LAT
 import com.solutions.grutne.flovind.MainActivity.Companion.HOME_LON
+import com.solutions.grutne.flovind.R
 import timber.log.Timber
 import java.io.IOException
 import java.lang.Double
@@ -81,7 +83,7 @@ object Utils {
                     java.text.SimpleDateFormat("EEE, MMM dd", Locale.getDefault())
         val date = Date(millis)
 
-        return dateFormat.format(date).substring(0,1).toUpperCase() + dateFormat.format(date).substring(1)
+        return dateFormat.format(date).substring(0, 1).toUpperCase() + dateFormat.format(date).substring(1)
     }
 
     // Returns true if the whole hour of time given (next low tide time) is after current time
@@ -145,40 +147,48 @@ object Utils {
         return rawDate.substring(0, 10)
     }
 
-    @Throws(IOException::class, IndexOutOfBoundsException::class)
-    fun getAccuratePlaceName(context: Context, latLng: LatLng): String {
 
-        val geocoder = Geocoder(context, Locale.getDefault())
-        val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-        var place = ""
+    /**
+     * The Geocoder is inconsistent in how it organizes various parts of an Norwegian address.
+     * This is an attempt to provide meaningful place names (stedsnavn), and extracting the 'tettsted' from a given location.
+     * */
+
+    @Throws(IOException::class, IndexOutOfBoundsException::class, RemoteException::class)
+    fun getAccuratePlaceName(context: Context, latLng: LatLng): String {
         try {
-            val address = addresses[0].getAddressLine(0)
+            val geocoder = Geocoder(context, Locale.getDefault())
+            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+
+            val currentAddress = addresses[0]
+            var place = ""
+            var area = ""
+            val adminArea = addresses[0].adminArea
             val subAdminArea = addresses[0].subAdminArea
 
-            val sb = StringBuilder()
-
-            if (address.substring(0, 7) == "Unnamed" ||
-                    address.substring(0, 2) == "Fv" ||
-                    address.substring(0, 2) == "E1" ||
-                    address.substring(0, 2) == "E6" ||
-                    address.substring(0, 2) == "Rv")
-                return getPlaceName(addresses)
-            for (c in address.toCharArray()) {
-                if (Character.isLetter(c) || Character.isSpaceChar(c))
-                    sb.append(c)
-                else
-                    break
+            if (isPlaceNameMeaningful(currentAddress.featureName) &&
+                    !subAdminArea.isNullOrEmpty() && !subAdminArea.contains(currentAddress.featureName)) {
+                place = currentAddress.featureName
+                area = if (isPlaceNameMeaningful(subAdminArea)) subAdminArea else adminArea
+            } else if (isPlaceNameMeaningful(currentAddress.thoroughfare)) {
+                place = currentAddress.thoroughfare
+                if (isPlaceNameMeaningful(subAdminArea)) area = subAdminArea else if (isPlaceNameMeaningful(adminArea)) area = adminArea
+            } else if (isPlaceNameMeaningful(currentAddress.adminArea) && isPlaceNameMeaningful(currentAddress.subAdminArea)) {
+                place = currentAddress.subAdminArea
+                area = currentAddress.adminArea
             }
-            val possibleSpaceIndex = sb.length - 1
-            if (sb.length > 0 && Character.isSpaceChar(sb[possibleSpaceIndex]))
-                sb.deleteCharAt(possibleSpaceIndex)
+            return "$place, $area"
 
-            place = sb.append(", ").append(subAdminArea).toString()
-        } catch (ioe: IndexOutOfBoundsException) {
-            ioe.printStackTrace()
+        } catch (e: RemoteException) {
+            return context.getString(R.string.address_unavailable)
+        } catch (e: IndexOutOfBoundsException) {
+            return context.getString(R.string.address_unavailable)
+        } catch (e: IOException) {
+            return context.getString(R.string.address_unavailable)
         }
+    }
 
-        return place
+    private fun isPlaceNameMeaningful(placeName: String?): Boolean {
+        return !placeName.isNullOrEmpty() && placeName != "null" && !placeName.matches(Regex(".*\\d.*"))
     }
 
     @Throws(IOException::class, IndexOutOfBoundsException::class)
@@ -214,7 +224,7 @@ object Utils {
     }
 
     @Throws(IOException::class)
-    fun getPlaceName(context: Context, latLng: LatLng): String {
+    private fun getPlaceName(context: Context, latLng: LatLng): String {
         val geocoder = Geocoder(context, Locale.getDefault())
         val addresses = geocoder.getFromLocation(latLng.latitude,
                 latLng.longitude, 1)

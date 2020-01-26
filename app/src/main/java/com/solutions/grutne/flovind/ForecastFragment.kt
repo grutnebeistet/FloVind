@@ -1,11 +1,13 @@
 package com.solutions.grutne.flovind
 
-import android.content.SharedPreferences
+
+import android.content.*
 import android.database.Cursor
 import android.location.Location
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.design.widget.Snackbar
+import android.support.v4.content.LocalBroadcastManager
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -14,16 +16,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.TextView
-import com.google.android.gms.maps.*
-import com.google.android.gms.maps.model.*
-
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 import com.solutions.grutne.flovind.MainActivity.Companion.EXTRA_LATITUDE
 import com.solutions.grutne.flovind.MainActivity.Companion.EXTRA_LONGITUDE
-
-
-import java.io.IOException
-import java.text.ParseException
-import java.util.concurrent.TimeUnit
 import com.solutions.grutne.flovind.adapters.TidesDataAdapter
 import com.solutions.grutne.flovind.adapters.WindsDataAdapter
 import com.solutions.grutne.flovind.data.DbContract
@@ -32,6 +34,10 @@ import com.solutions.grutne.flovind.utils.Utils
 import kotlinx.android.synthetic.main.fragment_forecast.view.*
 import kotlinx.android.synthetic.main.sun_rise_set.view.*
 import timber.log.Timber
+import java.io.IOException
+import java.text.ParseException
+import java.util.concurrent.TimeUnit
+
 
 /**
  * Created by Adrian on 24/10/2017.
@@ -71,6 +77,17 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     private var mPreferences: SharedPreferences? = null
     private var mVisibility = View.VISIBLE
 
+    private val mMessageReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent) { // Get extra data included in the Intent
+            Timber.d("onReceive ${intent.action}")
+            when (intent.action) {
+                "FORECAST_INSERTED" -> {
+                    restartLoaders(intent.getBooleanExtra("IS_HOME_LOCATION", true))
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
@@ -101,12 +118,6 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         val view = inflater.inflate(R.layout.fragment_forecast, container, false)
         mLocationButton = (view.findViewById<View>(Integer.parseInt("1")).parent as View).findViewById(Integer.parseInt("2"))
 
-        val rlp = mLocationButton!!.layoutParams as RelativeLayout.LayoutParams
-        // position on right bottom
-        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE)
-        rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0)
-        rlp.setMargins(0, resources.getInteger(R.integer.loc_butt_padding_top), 32, 0)
-
         mContainer = view.findViewById<CardView>(R.id.cardview_container) as CardView
         mDateTimeTextView = view.findViewById<TextView>(R.id.forecast_date) as TextView
         mErrorTextView = view.findViewById<TextView>(R.id.tides_error_tv) as TextView
@@ -125,6 +136,13 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         mWindsRecyclerView = view.findViewById<RecyclerView>(R.id.winds_recycler_view) as RecyclerView
         mWindsRecyclerView.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false)
         mWindsRecyclerView.adapter = mWindsAdapter
+
+
+//        val rlp = mLocationButton!!.layoutParams as RelativeLayout.LayoutParams
+//         position at bottom right
+//        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE)
+//        rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE)
+//        rlp.setMargins(0, resources.getInteger(R.integer.loc_butt_padding_top), 32, 0)
 
 
         return view
@@ -158,11 +176,13 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
         if (savedInstanceState == null) {
             Timber.d("saved == null")
             initLocation()
-        } else
-            restartLoaders(false)
+        }
+//        else
+        restartLoaders(false)
 
         mNextDay.setOnClickListener(View.OnClickListener {
             val currentDate = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
@@ -210,6 +230,14 @@ class ForecastFragment : android.support.v4.app.Fragment(),
             mPrevDay.visibility = View.INVISIBLE
             showSnackbar(getString(R.string.connection_error))
         }
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("FORECAST_INSERTED")
+        LocalBroadcastManager.getInstance(context!!).registerReceiver(mMessageReceiver, intentFilter)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        LocalBroadcastManager.getInstance(context!!).unregisterReceiver(mMessageReceiver)
     }
 
     private fun showSnackbar(text: String) {
@@ -221,8 +249,9 @@ class ForecastFragment : android.support.v4.app.Fragment(),
 
     private fun restartLoaders(homeLocation: Boolean) {
         try {
-            mLocationTextView.text = Utils.getPlaceName(context!!, homeLocation)
-//            mLocationTextView!!.text = (Utils.getAccuratePlaceName(context!!, homeLocation))
+//            mLocationTextView.text = Utils.getPlaceName(context!!, homeLocation)
+            mLocationTextView.text = (Utils.getAccuratePlaceName(context!!, homeLocation))
+
             val dateShown = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
                     Utils.getDate(System.currentTimeMillis()))
             mDateTimeTextView.text = (Utils.getPrettyDate(Utils.getDateInMillisec(dateShown!!)))
@@ -289,8 +318,6 @@ class ForecastFragment : android.support.v4.app.Fragment(),
                 while (cursor!!.moveToNext()) {
                     val type = cursor.getString(INDEX_RISE_SET_TYPE)
                     val time = cursor.getString(INDEX_RISE_SET_TIME)
-                    val date = cursor.getString(INDEX_RISE_SET_DATE)
-
                     when (type) {
                         "sunrise" -> {
                             mContainer.sunrise_set.rising_time.text = Utils.getFormattedTime(time)
@@ -357,7 +384,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     private fun updateValuesOnLocationChange(homeLocation: Boolean) {
         val thread = Thread(Runnable { syncData(context!!, homeLocation) })
         thread.start()
-        restartLoaders(homeLocation)
+//        restartLoaders(homeLocation)
 
     }
 
@@ -391,7 +418,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
             editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis()))
             editor.putString(EXTRA_LATITUDE, latLng.latitude.toString())
             editor.putString(EXTRA_LONGITUDE, latLng.longitude.toString())
-            editor.commit()
+            editor.apply()
 
             updateValuesOnLocationChange(false)
             mVisibility = View.VISIBLE
@@ -403,7 +430,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
             editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis()))
             editor.putString(EXTRA_LATITUDE, latLng.latitude.toString())
             editor.putString(EXTRA_LONGITUDE, latLng.longitude.toString())
-            editor.commit()
+            editor.apply()
             var place = ""
             try {
                 place = Utils.getAccuratePlaceName(context!!, latLng) // TODO pinpusse accurateplace
@@ -443,7 +470,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis()))
         editor.putString(EXTRA_LATITUDE, marker.position.latitude.toString())
         editor.putString(EXTRA_LONGITUDE, marker.position.longitude.toString())
-        editor.commit()
+        editor.apply()
 
         updateValuesOnLocationChange(false)
         marker.hideInfoWindow()
@@ -458,13 +485,10 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     private var locationBtnCliked = false
     override fun onMyLocationButtonClick(): Boolean {
         Timber.d("onMyLocationButtonClick")
-//        mVisibility = View.VISIBLE
         locationBtnCliked = true
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
-//        initLocation()
         updateValuesOnLocationChange(homeLocation = true)
-//        mMapZoom = MAP_ZOOM_DEFAULT
 
         return false
     }
@@ -543,22 +567,18 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         private const val LOADER_ID_RISE_SET = 1351
 
         val TIDES_PROJECTION = arrayOf(DbContract.TidesEntry.COLUMN_TIDES_DATE, DbContract.TidesEntry.COLUMN_WATER_LEVEL, DbContract.TidesEntry.COLUMN_LEVEL_FLAG, DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL, DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG)
-        const val INDEX_TIDE_DATE = 0
         const val INDEX_TIDE_LEVEL = 1
         const val INDEX_LEVEL_TIME = 3
         const val INDEX_FLAG = 2
         const val INDEX_ERROR = 4
 
         val WINDS_PROJECTION = arrayOf(DbContract.WindsEntry.COLUMN_WINDS_DATE, DbContract.WindsEntry.COLUMN_TIME_OF_WIND, DbContract.WindsEntry.COLUMN_WIND_DIR_DEG, DbContract.WindsEntry.COLUMN_WIND_SPEED, DbContract.WindsEntry.COLUMN_WIND_DIRECTION)
-        const val INDEX_WIND_DATE = 0
         const val INDEX_WIND_TIME = 1
-        const val INDEX_WIND_DIR_DEG = 2
         const val INDEX_WIND_SPEED = 3
         const val INDEX_WIND_DIR = 4
 
         val RISE_SET_PROJECTION = arrayOf(DbContract.RiseSetEntry.COLUMN_RISE_SET_TYPE, DbContract.RiseSetEntry.COLUMN_RISE_SET_DATE, DbContract.RiseSetEntry.COLUMN_TIME_OF_RISE_SET)
         const val INDEX_RISE_SET_TYPE = 0
-        const val INDEX_RISE_SET_DATE = 1
         const val INDEX_RISE_SET_TIME = 2
 
         const val EXTRA_TIDE_QUERY_DATE = "tides_date"
@@ -568,7 +588,6 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         private const val LOCATION = "location"
         private const val CONTAINER_VISIBILITY = "visibility"
 
-        private const val FORECAST_DAYS = 7
         private const val MAP_ZOOM_DEFAULT = 8f
         private var LAT_LNG: LatLng? = null
 

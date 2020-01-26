@@ -12,11 +12,10 @@
         android:id="@+id/cardview_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerVertical="true"
+        android:layout_centerInParent="true"
         android:layout_marginStart="18dp"
         android:layout_marginEnd="18dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginTop="18dp"
         app:cardElevation="0.7dp"
         app:cardMaxElevation="1dp"
         app:cardPreventCornerOverlap="true"
@@ -28,46 +27,32 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <include
+            <FrameLayout
                 android:id="@+id/place_nav"
-                layout="@layout/tides_place_navigation" />
-
-            <TextView
-                android:id="@+id/forecast_date"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:contentDescription="@string/content_desc_date"
-                android:gravity="center_horizontal"
-                android:textSize="@dimen/list_item_text_size"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/place_nav"
-                tools:text="Monday, Oct 23rd" />
+                app:layout_constraintTop_toTopOf="parent">
+
+                <include layout="@layout/tides_place_navigation" />
+            </FrameLayout>
 
             <include
                 android:id="@+id/sunrise_set"
                 layout="@layout/sun_rise_set"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintRight_toLeftOf="@id/forecast_date"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/tides_rv_frame"/>
+                android:layout_marginStart="16dp"
+                app:layout_constraintBottom_toTopOf="@id/tides_rv_frame"
+                app:layout_constraintLeft_toLeftOf="parent" />
 
             <include
                 android:id="@+id/moonrise_set"
                 layout="@layout/moon_rise_set"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintLeft_toRightOf="@id/forecast_date"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/tides_rv_frame"/>
-
-            <android.support.constraint.Guideline
-                android:id="@+id/divider"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                app:layout_constraintGuide_percent="0.16"
-                app:layout_constraintTop_toBottomOf="@id/forecast_date" />
+                android:layout_marginEnd="16dp"
+                app:layout_constraintBottom_toTopOf="@id/tides_rv_frame"
+                app:layout_constraintRight_toRightOf="parent" />
 
 
             <FrameLayout
@@ -79,7 +64,7 @@
                 android:paddingRight="@dimen/padding_half"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/forecast_date">
+                app:layout_constraintTop_toBottomOf="@id/place_nav">
 
 
                 <android.support.v7.widget.RecyclerView
@@ -104,9 +89,9 @@
             <View
                 android:id="@+id/divider_list_item"
                 style="@style/Divider"
-                android:layout_marginBottom="4dp"
                 android:layout_marginLeft="8dp"
                 android:layout_marginRight="8dp"
+                android:layout_marginBottom="4dp"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tides_rv_frame" />
@@ -129,7 +114,7 @@
                     android:orientation="horizontal"
                     android:paddingLeft="@dimen/padding"
                     android:paddingRight="@dimen/padding"
-                    android:paddingBottom="@dimen/padding"/>
+                    android:paddingBottom="@dimen/padding" />
             </FrameLayout>
         </android.support.constraint.ConstraintLayout>
     </android.support.v7.widget.CardView>

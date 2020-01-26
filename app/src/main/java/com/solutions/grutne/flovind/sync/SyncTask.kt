@@ -1,6 +1,8 @@
 package com.solutions.grutne.flovind.sync
 
 import android.content.Context
+import android.content.Intent
+import android.support.v4.content.LocalBroadcastManager
 import com.solutions.grutne.flovind.utils.NetworkUtils
 import com.solutions.grutne.flovind.data.DbContract
 
@@ -45,6 +47,10 @@ object FloVindSyncTask {
                         DbContract.RiseSetEntry.CONTENT_URI_RISE_SET, null, null)
                 resolver.bulkInsert(DbContract.RiseSetEntry.CONTENT_URI_RISE_SET, riseSetData)
             }
+
+            val intent = Intent("FORECAST_INSERTED")
+            intent.putExtra("IS_HOME_LOCATION", homeLocation)
+            LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
 
         } catch (e: Exception) {
             Timber.d("failed to sync data")

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/title_ll"
+    android:id="@+id/navigation_header_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginEnd="4dp"
     android:layout_marginStart="4dp"
+    android:layout_marginEnd="4dp"
     android:gravity="center_horizontal"
-    android:orientation="horizontal"
-    android:paddingTop="16dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="22dp"
     android:weightSum="12"
     app:layout_constraintLeft_toLeftOf="parent"
     app:layout_constraintRight_toRightOf="parent"
@@ -22,18 +22,19 @@
         android:layout_height="36dp"
         android:layout_gravity="start|center_vertical"
         android:layout_weight="2"
-        android:nextFocusForward="@+id/image_button_curr_loc"
         android:nextFocusRight="@drawable/next_day"
         android:nextFocusUp="@drawable/current_location"
-        android:visibility="invisible"
+        android:nextFocusForward="@+id/image_button_curr_loc"
         android:paddingEnd="@dimen/padding_half"
         android:paddingRight="@dimen/padding_half"
-        >
+        android:visibility="invisible"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
+            android:id="@+id/prev_day_image"
             android:layout_width="26dp"
             android:layout_height="26dp"
-            android:id="@+id/prev_day_image"
             android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
             android:layout_centerInParent="true"
@@ -41,18 +42,34 @@
             android:src="@drawable/prev_day" />
     </RelativeLayout>
 
+
     <TextView
         android:id="@+id/location_name"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="52dp"
+        app:layout_constraintRight_toLeftOf="@id/next_day_button"
+        app:layout_constraintLeft_toRightOf="@id/prev_day_button"
         android:layout_gravity="center_horizontal"
         android:layout_weight="8"
-        android:maxLines="2"
+        android:autoSizeMaxTextSize="26sp"
+        android:autoSizeMinTextSize="12sp"
+        android:autoSizeTextType="uniform"
+        android:autoSizeStepGranularity="2sp"
         android:contentDescription="@string/content_desc_location"
         android:gravity="center"
-        android:textSize="@dimen/location_textsize"
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-        tools:text="Jekla langt stedsnavn i helvete" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Skjervøy kommune, Troms og Finnmark" />
+
+    <TextView
+        android:id="@+id/forecast_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/content_desc_date"
+        android:gravity="center_horizontal"
+        android:textSize="@dimen/list_item_text_size"
+        app:layout_constraintTop_toBottomOf="@id/location_name"
+        tools:text="Monday, Oct 23rd" />
 
     <RelativeLayout
         android:id="@+id/next_day_button"
@@ -60,23 +77,23 @@
         android:layout_height="36dp"
         android:layout_gravity="end|center_vertical"
         android:layout_weight="2"
-        android:nextFocusForward="@+id/prev_day_button"
         android:nextFocusLeft="@drawable/prev_day"
         android:nextFocusUp="@drawable/current_location"
+        android:nextFocusForward="@+id/prev_day_button"
         android:paddingStart="@dimen/padding_half"
         android:paddingLeft="@dimen/padding_half"
-        >
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
+            android:id="@+id/next_day_image"
             android:layout_width="26dp"
             android:layout_height="26dp"
-            android:id="@+id/next_day_image"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_centerInParent="true"
             android:contentDescription="@string/content_desc_next_day"
-            android:src="@drawable/next_day"
-            />
+            android:src="@drawable/next_day" />
     </RelativeLayout>
 
-</LinearLayout>
+</android.support.constraint.ConstraintLayout>
