@@ -23,9 +23,6 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         addPreferencesFromResource(R.xml.app_preferences)
         Timber.d("OnCreate PREFF")
         val sharedPreferences = preferenceScreen.sharedPreferences
-        if (sharedPreferences.getString(getString(R.string.pref_map_type_key),
-                getString(R.string.map_type_def_value)) == getString(R.string.map_type_def_value))
-            findPreference(getString(R.string.map_pref_key)).isEnabled=true
 
         val count = preferenceScreen.preferenceCount
         for (i in 0 until count) {
@@ -50,15 +47,17 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
                 Timber.d("set summary: " + preference.entries[prefIndex])
                 preference.setSummary(preference.entries[prefIndex])
                 if (key == getString(R.string.pref_map_type_key))
-                    if (value != getString(R.string.map_type_def_value))
-                        findPreference(getString(R.string.map_pref_key)).isEnabled = false
-                    else
-                        findPreference(getString(R.string.map_pref_key)).isEnabled = true
+                    findPreference(getString(R.string.map_pref_key)).isEnabled = value != getString(R.string.map_type_def_value)
             }
         } else {
             // For other preferences, set the summary to the value's simple string representation.
             preference.summary = stringValue
         }
+
+        findPreference(getString(R.string.map_pref_key)).isEnabled =
+                preferenceScreen.sharedPreferences.getString(getString(R.string.pref_map_type_key),
+                        getString(R.string.map_type_def_value)) == getString(R.string.map_type_def_value)
+
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, s: String) {

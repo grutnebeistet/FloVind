@@ -37,6 +37,8 @@ import timber.log.Timber
 import java.io.IOException
 import java.text.ParseException
 import java.util.concurrent.TimeUnit
+import java.util.prefs.PreferenceChangeEvent
+import java.util.prefs.PreferenceChangeListener
 
 
 /**
@@ -233,6 +235,10 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         val intentFilter = IntentFilter()
         intentFilter.addAction("FORECAST_INSERTED")
         LocalBroadcastManager.getInstance(context!!).registerReceiver(mMessageReceiver, intentFilter)
+
+        if (mMap != null) {
+            onMapReady(mMap)
+        }
     }
 
     override fun onPause() {
@@ -400,14 +406,9 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         mMap!!.isMyLocationEnabled = true
         mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(LAT_LNG, mMapZoom))
 
-
         Timber.d("Map camera set to lat: " + LAT_LNG!!.latitude)
 
         val maptype = mPreferences!!.getString(getString(R.string.pref_map_type_key), getString(R.string.map_type_def_value))
-/*        if (maptype == GoogleMap.MAP_TYPE_HYBRID.toString() || maptype == GoogleMap.MAP_TYPE_SATELLITE.toString())
-            mResetLoc!!.setBackgroundColor(Color.WHITE)
-        if (maptype == GoogleMap.MAP_TYPE_NONE.toString())
-            mResetLoc!!.visibility = View.GONE*/
 
         mMap!!.mapType = Integer.parseInt(maptype)
         setSelectedStyle()
@@ -507,6 +508,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         outState.putInt(CONTAINER_VISIBILITY, mContainer.visibility)
         super.onSaveInstanceState(outState)
     }
+
 
     /**
      * Creates a [MapStyleOptions] object via loadRawResourceStyle() (or via the
