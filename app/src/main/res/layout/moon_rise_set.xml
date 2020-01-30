@@ -21,7 +21,7 @@
         android:layout_marginTop="@dimen/padding_double"
         android:paddingEnd="@dimen/padding_half"
         android:paddingRight="@dimen/padding_half"
-        android:text="09:00" />
+        />
 
     <ImageView
         android:id="@+id/setting_icon"
@@ -40,5 +40,5 @@
         android:layout_marginTop="@dimen/padding_double"
         app:layout_constraintTop_toBottomOf="@id/rising_time"
         android:paddingEnd="@dimen/padding_half"
-        android:text="17:00" />
+        />
 </android.support.constraint.ConstraintLayout>

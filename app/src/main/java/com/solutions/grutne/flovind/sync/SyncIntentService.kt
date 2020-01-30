@@ -2,6 +2,7 @@ package com.solutions.grutne.flovind.sync
 
 import android.app.IntentService
 import android.content.Intent
+import com.solutions.grutne.flovind.utils.Utils
 
 import timber.log.Timber
 
@@ -12,6 +13,7 @@ import timber.log.Timber
 class SyncIntentService : IntentService("StatsnailSyncIntentService") {
     override fun onHandleIntent(intent: Intent?) {
         Timber.d("onHandleIntent, call syncData")
-        FloVindSyncTask.syncData(this, true)
+        val latLng = Utils.getHomeLatLong(this)
+        FloVindSyncTask.syncData(this, latLng)
     }
 }

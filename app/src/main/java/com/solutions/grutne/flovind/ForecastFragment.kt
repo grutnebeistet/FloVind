@@ -24,21 +24,17 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.solutions.grutne.flovind.MainActivity.Companion.EXTRA_LATITUDE
-import com.solutions.grutne.flovind.MainActivity.Companion.EXTRA_LONGITUDE
 import com.solutions.grutne.flovind.adapters.TidesDataAdapter
 import com.solutions.grutne.flovind.adapters.WindsDataAdapter
 import com.solutions.grutne.flovind.data.DbContract
 import com.solutions.grutne.flovind.sync.FloVindSyncTask.syncData
+import com.solutions.grutne.flovind.utils.FloVindDateUtils
 import com.solutions.grutne.flovind.utils.Utils
 import kotlinx.android.synthetic.main.fragment_forecast.view.*
 import kotlinx.android.synthetic.main.sun_rise_set.view.*
 import timber.log.Timber
 import java.io.IOException
 import java.text.ParseException
-import java.util.concurrent.TimeUnit
-import java.util.prefs.PreferenceChangeEvent
-import java.util.prefs.PreferenceChangeListener
 
 
 /**
@@ -75,7 +71,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     private var mLocation: Location? = null
     private var mTidesAdapter: TidesDataAdapter? = null
     private var mWindsAdapter: WindsDataAdapter? = null
-    private var mMapZoom = MAP_ZOOM_DEFAULT.toFloat()
+    private var mMapZoom = MAP_ZOOM_DEFAULT
     private var mPreferences: SharedPreferences? = null
     private var mVisibility = View.VISIBLE
 
@@ -84,7 +80,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
             Timber.d("onReceive ${intent.action}")
             when (intent.action) {
                 "FORECAST_INSERTED" -> {
-                    restartLoaders(intent.getBooleanExtra("IS_HOME_LOCATION", true))
+                    restartLoaders()//intent.getBooleanExtra("IS_HOME_LOCATION", true)
                 }
             }
         }
@@ -93,42 +89,41 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
-//        val editor = mPreferences!!.edit() // make member?
+        initLocation()
 
         if (savedInstanceState != null) {
-            Timber.d("Saved not null")
-            //  mSelectedStyleId = savedInstanceState.getInt(SELECTED_STYLE);
+            Timber.d("retrievingsavedstate map zoom $mMapZoom")
             mMapZoom = savedInstanceState.getFloat(MAP_ZOOM)
-
-            val longitude = savedInstanceState.getDouble(EXTRA_LONGITUDE)
-            val latitude = savedInstanceState.getDouble(EXTRA_LATITUDE)
-//            editor.putString(EXTRA_LATITUDE, latitude.toString())
-//            editor.putString(EXTRA_LONGITUDE, longitude.toString())
-//            editor.apply()
-
-            LAT_LNG = LatLng(latitude, longitude)
         }
 
-
-//        editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis())).apply()
         mTidesAdapter = TidesDataAdapter(context!!)
         mWindsAdapter = WindsDataAdapter(context!!)
 
+    }
+
+    private fun initLocation() {
+        try {
+            mLocation = arguments!!.getParcelable(LOCATION)
+            LAT_LNG_HOME = LatLng(mLocation!!.latitude, mLocation!!.longitude)
+            LAT_LNG_FORECAST = LAT_LNG_HOME
+        } catch (e: NullPointerException) {
+            e.printStackTrace()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_forecast, container, false)
         mLocationButton = (view.findViewById<View>(Integer.parseInt("1")).parent as View).findViewById(Integer.parseInt("2"))
 
-        mContainer = view.findViewById<CardView>(R.id.cardview_container) as CardView
-        mDateTimeTextView = view.findViewById<TextView>(R.id.forecast_date) as TextView
-        mErrorTextView = view.findViewById<TextView>(R.id.tides_error_tv) as TextView
-        mLocationTextView = view.findViewById<TextView>(R.id.location_name) as TextView
-        mNextDay = view.findViewById<RelativeLayout>(R.id.next_day_button) as RelativeLayout
-        mPrevDay = view.findViewById<RelativeLayout>(R.id.prev_day_button) as RelativeLayout
+        mContainer = view.findViewById(R.id.cardview_container) as CardView
+        mDateTimeTextView = view.findViewById(R.id.forecast_date) as TextView
+        mErrorTextView = view.findViewById(R.id.tides_error_tv) as TextView
+        mLocationTextView = view.findViewById(R.id.location_name) as TextView
+        mNextDay = view.findViewById(R.id.next_day_button) as RelativeLayout
+        mPrevDay = view.findViewById(R.id.prev_day_button) as RelativeLayout
         if (savedInstanceState != null) {
-            mVisibility = savedInstanceState.getInt(CONTAINER_VISIBILITY)
-            mContainer.visibility = mVisibility
+//            mVisibility = savedInstanceState.getInt(CONTAINER_VISIBILITY)
+//            mContainer.visibility = mVisibility
 
         }
         mTidesRecyclerView = view.findViewById<RecyclerView>(R.id.tides_recycler_view) as RecyclerView
@@ -139,39 +134,39 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         mWindsRecyclerView.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false)
         mWindsRecyclerView.adapter = mWindsAdapter
 
-
-//        val rlp = mLocationButton!!.layoutParams as RelativeLayout.LayoutParams
-//         position at bottom right
-//        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE)
-//        rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE)
-//        rlp.setMargins(0, resources.getInteger(R.integer.loc_butt_padding_top), 32, 0)
-
-
         return view
     }
 
-    private fun initLocation() {
-
+    private val onNextDayClick = View.OnClickListener {
+        Timber.e("nextDayOnClick")
         try {
-            mLocation = arguments!!.getParcelable(LOCATION)
-        } catch (e: NullPointerException) {
+            val tomorrowPersistentDate = FloVindDateUtils.getPersistentDatePlusOne(currentPersistentDate!!)
+            mPreferences!!.edit().putString(EXTRA_TIDE_QUERY_DATE, tomorrowPersistentDate).apply()
+            val prettyDate = FloVindDateUtils.getPrettyDateFromPersistentDate(tomorrowPersistentDate)
+            mDateTimeTextView.text = prettyDate
+
+            restartLoaders()
+        } catch (e: ParseException) {
+            Timber.e("failed to increase date")
             e.printStackTrace()
         }
 
-        val useHomeLocation = true
-        val editor = mPreferences!!.edit()
-        val longitude: String
-        val latitude: String
-        if (mLocation != null) {
-            Timber.d("loc notNull latitude: " + mLocation!!.latitude)
-            LAT_LNG = LatLng(mLocation!!.latitude, mLocation!!.longitude)
-            longitude = mLocation!!.longitude.toString()
-            latitude = mLocation!!.latitude.toString()
-            editor.putString(EXTRA_LONGITUDE, longitude)
-            editor.putString(EXTRA_LATITUDE, latitude)
-            editor.apply()
+        mPrevDay.visibility = View.VISIBLE
+    }
+    private val onPrevDayClick = View.OnClickListener {
+        Timber.e("prevDayOnClick")
+        try {
+            val yesterdayPersistentDate = FloVindDateUtils.getPersistentDateMinusOne(currentPersistentDate!!)
+            mPreferences!!.edit().putString(EXTRA_TIDE_QUERY_DATE, yesterdayPersistentDate).apply()
+
+            val prettyDate = FloVindDateUtils.getPrettyDateFromPersistentDate(yesterdayPersistentDate)
+            mDateTimeTextView.text = prettyDate
+
+            restartLoaders()
+        } catch (e: ParseException) {
+            Timber.e("failed to decrease date")
+            e.printStackTrace()
         }
-        updateValuesOnLocationChange(useHomeLocation)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -179,49 +174,8 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        if (savedInstanceState == null) {
-            Timber.d("saved == null")
-            initLocation()
-        }
-//        else
-        restartLoaders(false)
-
-        mNextDay.setOnClickListener(View.OnClickListener {
-            val currentDate = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
-                    Utils.getDate(System.currentTimeMillis()))
-            try {
-                val tomorrow = Utils.getDatePlusOne(currentDate)
-
-                if (Utils.isTomorrowLast(tomorrow)) {
-                    mNextDay.visibility = View.INVISIBLE
-                    return@OnClickListener
-                } else {
-                    mPreferences!!.edit().putString(EXTRA_TIDE_QUERY_DATE, tomorrow).apply()
-                    mDateTimeTextView.text = (Utils.getPrettyDate(Utils.getDateInMillisec(tomorrow))) // TODO not very efficient, lag egen metode
-
-                    restartLoaders(homeLocation = false)
-                }
-            } catch (e: ParseException) {
-                Timber.e("failed to increase date")
-                e.printStackTrace()
-            }
-
-            mPrevDay.visibility = View.VISIBLE
-        })
-        mPrevDay.setOnClickListener {
-            val currentDate = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
-                    Utils.getDate(System.currentTimeMillis()))
-            try {
-                val yesterday = Utils.getDateMinusOne(currentDate)
-                mPreferences!!.edit().putString(EXTRA_TIDE_QUERY_DATE, yesterday).apply()
-                mDateTimeTextView.text = (Utils.getPrettyDate(Utils.getDateInMillisec(yesterday)))
-
-                restartLoaders(homeLocation = false)
-            } catch (e: ParseException) {
-                Timber.e("failed to decrease date")
-                e.printStackTrace()
-            }
-        }
+        mNextDay.setOnClickListener(onNextDayClick)
+        mPrevDay.setOnClickListener(onPrevDayClick)
 
     }
 
@@ -230,7 +184,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         if (!Utils.workingConnection(context!!)) { // TODO and adapter empty for day btns?
             mNextDay.visibility = View.INVISIBLE
             mPrevDay.visibility = View.INVISIBLE
-            showSnackbar(getString(R.string.connection_error))
+            showSnackBar(getString(R.string.connection_error))
         }
         val intentFilter = IntentFilter()
         intentFilter.addAction("FORECAST_INSERTED")
@@ -246,21 +200,25 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         LocalBroadcastManager.getInstance(context!!).unregisterReceiver(mMessageReceiver)
     }
 
-    private fun showSnackbar(text: String) {
+    private fun showSnackBar(text: String) {
         val container = activity!!.findViewById<View>(R.id.tides_content)
         if (container != null) {
             Snackbar.make(container, text, Snackbar.LENGTH_LONG).show()
         }
     }
 
-    private fun restartLoaders(homeLocation: Boolean) {
-        try {
-//            mLocationTextView.text = Utils.getPlaceName(context!!, homeLocation)
-            mLocationTextView.text = (Utils.getAccuratePlaceName(context!!, homeLocation))
+    private val currentPersistentDate: String?
+        get() = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
+                FloVindDateUtils.millisToPersistentFormat(System.currentTimeMillis()))
 
-            val dateShown = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
-                    Utils.getDate(System.currentTimeMillis()))
-            mDateTimeTextView.text = (Utils.getPrettyDate(Utils.getDateInMillisec(dateShown!!)))
+    private fun restartLoaders() {
+        try {
+            mLocationTextView.text = (Utils.getAccuratePlaceName(context!!, LAT_LNG_FORECAST!!))
+
+            val prettyDate = FloVindDateUtils.getPrettyDateFromPersistentDate(currentPersistentDate!!)
+
+            mDateTimeTextView.text = prettyDate
+
         } catch (e: IOException) {
             e.printStackTrace()
             mErrorTextView.setText(R.string.error_unknown)
@@ -282,8 +240,9 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         Timber.d("onCr Loader")
         val sortOrder: String
         val selection: String
-        val selectionArgs = arrayOf(mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
-                Utils.getDate(System.currentTimeMillis())))
+
+        val selectionArgs = arrayOf(currentPersistentDate)
+
         when (i) {
             LOADER_ID_RISE_SET -> {
                 sortOrder = DbContract.RiseSetEntry.COLUMN_RISE_SET_TYPE + " DESC"
@@ -313,32 +272,30 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     override fun onLoadFinished(loader: android.support.v4.content.Loader<Cursor>, cursor: Cursor?) {
         mMap!!.uiSettings.isZoomControlsEnabled = mContainer.visibility != View.VISIBLE
 
-        val currentDate = mPreferences!!.getString(EXTRA_TIDE_QUERY_DATE,
-                Utils.getDate(System.currentTimeMillis()))
-        if (currentDate < (Utils.getDate(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1)))) {
-            mPrevDay.visibility = View.INVISIBLE
-        }
         when (loader.id) {
             LOADER_ID_RISE_SET -> {
                 Timber.d("Rise Set cursor: ${cursor?.count}")
+                mContainer.sunrise_set.visibility = if (cursor == null || cursor.count > 0) View.VISIBLE else View.GONE
+                mContainer.moonrise_set.visibility = if (cursor == null || cursor.count > 0) View.VISIBLE else View.GONE
+
                 while (cursor!!.moveToNext()) {
                     val type = cursor.getString(INDEX_RISE_SET_TYPE)
                     val time = cursor.getString(INDEX_RISE_SET_TIME)
+                    val prettyTime = FloVindDateUtils.getFormattedTime(time)
                     when (type) {
                         "sunrise" -> {
-                            mContainer.sunrise_set.rising_time.text = Utils.getFormattedTime(time)
+                            mContainer.sunrise_set.rising_time.text = prettyTime
                         }
                         "sunset" -> {
-                            mContainer.sunrise_set.setting_time.text = Utils.getFormattedTime(time)
+                            mContainer.sunrise_set.setting_time.text = prettyTime
                         }
                         "moonrise" -> {
-                            mContainer.moonrise_set.rising_time.text = Utils.getFormattedTime(time)
+                            mContainer.moonrise_set.rising_time.text = prettyTime
                         }
                         "moonset" -> {
-                            mContainer.moonrise_set.setting_time.text = Utils.getFormattedTime(time)
+                            mContainer.moonrise_set.setting_time.text = prettyTime
                         }
                     }
-
 
                 }
             }
@@ -359,7 +316,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
                     }
                     in 1..2 -> {// cursor.count <= 2) {
                         Timber.d("onLoadFinished Tides 2: count: " + cursor?.count)
-                        mWindsRecyclerView.visibility = View.GONE // TODO fikse - problemet er eldre api ~23
+                        mWindsRecyclerView.visibility = View.GONE
                         cursor?.moveToFirst()
                         mErrorTextView.visibility = View.VISIBLE
                         mErrorTextView.text = cursor?.getString(INDEX_ERROR)
@@ -368,17 +325,24 @@ class ForecastFragment : android.support.v4.app.Fragment(),
                     }
                     else -> {
                         Timber.d("onLoadFinished Tides 3: count: " + cursor?.count)
-                        mWindsRecyclerView.visibility = View.VISIBLE // TODO fikse - problemet er eldre api ~23
+                        mWindsRecyclerView.visibility = View.VISIBLE
                         mTidesAdapter!!.swapCursor(cursor)
                         mErrorTextView.visibility = View.GONE
                         mNextDay.visibility = View.VISIBLE
                     }
                 }
+                val tomorrow = FloVindDateUtils.getPersistentDatePlusOne(currentPersistentDate!!)
+                if (FloVindDateUtils.isDateLastInBatch(tomorrow, System.currentTimeMillis())) {
+                    mNextDay.visibility = View.INVISIBLE
+                }
+                val isFirstDay = currentPersistentDate == FloVindDateUtils.getPersistentDateFromMillis(System.currentTimeMillis())
+                if (isFirstDay) {
+                    mPrevDay.visibility = View.INVISIBLE
+                }
             }
         }
         if (locationBtnCliked) {
             mContainer.visibility = View.VISIBLE
-//            locationBtnCliked = false
         }
     }
 
@@ -387,8 +351,8 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         mWindsAdapter!!.swapCursor(null)
     }
 
-    private fun updateValuesOnLocationChange(homeLocation: Boolean) {
-        val thread = Thread(Runnable { syncData(context!!, homeLocation) })
+    private fun updateValuesOnLocationChange(latLng: LatLng) {
+        val thread = Thread(Runnable { syncData(context!!, latLng) })
         thread.start()
 //        restartLoaders(homeLocation)
 
@@ -397,57 +361,21 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     @SuppressWarnings("MissingPermission")
     override fun onMapReady(map: GoogleMap?) {
         mMap = map
-        //mResetLoc!!.visibility = View.GONE
         /*     mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.getUiSettings().setZoomGesturesEnabled(!(mVisibility == View.VISIBLE));
         mMap.getUiSettings().setZoomGesturesEnabled(true);*/
 
-        mMap!!.setOnMyLocationButtonClickListener(this)
+        setMapClickListeners()
         mMap!!.isMyLocationEnabled = true
-        mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(LAT_LNG, mMapZoom))
+        mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(LAT_LNG_FORECAST, mMapZoom))
 
-        Timber.d("Map camera set to lat: " + LAT_LNG!!.latitude)
+        Timber.d("Map camera set to lat: " + LAT_LNG_FORECAST!!.latitude)
 
         val maptype = mPreferences!!.getString(getString(R.string.pref_map_type_key), getString(R.string.map_type_def_value))
 
         mMap!!.mapType = Integer.parseInt(maptype)
         setSelectedStyle()
 
-        mMap!!.setOnMapLongClickListener { latLng ->
-            LAT_LNG = latLng
-            val editor = mPreferences!!.edit()
-            editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis()))
-            editor.putString(EXTRA_LATITUDE, latLng.latitude.toString())
-            editor.putString(EXTRA_LONGITUDE, latLng.longitude.toString())
-            editor.apply()
-
-            updateValuesOnLocationChange(false)
-            mVisibility = View.VISIBLE
-        }
-
-        mMap!!.setOnMapClickListener { latLng ->
-            LAT_LNG = latLng
-            val editor = mPreferences!!.edit()
-            editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis()))
-            editor.putString(EXTRA_LATITUDE, latLng.latitude.toString())
-            editor.putString(EXTRA_LONGITUDE, latLng.longitude.toString())
-            editor.apply()
-            var place = ""
-            try {
-                place = Utils.getAccuratePlaceName(context!!, latLng) // TODO pinpusse accurateplace
-                //Timber.d(Utils.getAccuratePlaceName(getActivity(), latLng));
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-
-            if (mCurrentMarker != null) mCurrentMarker!!.remove()
-            mCurrentMarker = mMap!!.addMarker(MarkerOptions()
-                    .position(latLng)
-                    .title(getString(R.string.conditions_label))
-                    .snippet(place))
-            mCurrentMarker!!.showInfoWindow()
-            mMap!!.setOnInfoWindowClickListener(this@ForecastFragment)
-        }
 
         mMap!!.setOnCameraIdleListener {
             Timber.d("map Cam Idle:\nlocationBtnCliked $locationBtnCliked \nmVisibility ${mVisibility == View.VISIBLE}")
@@ -464,16 +392,46 @@ class ForecastFragment : android.support.v4.app.Fragment(),
 
     }
 
+    private fun setMapClickListeners() {
+        mMap!!.setOnMyLocationButtonClickListener(this)
+
+        mMap!!.setOnMapClickListener { latLng ->
+            //            LAT_LNG = latLng
+
+//            setMapPrefs(latLng.latitude, latLng.longitude)
+            var place = ""
+            try {
+                place = Utils.getAccuratePlaceName(context!!, latLng)
+                //Timber.d(Utils.getAccuratePlaceName(getActivity(), latLng));
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+
+            if (mCurrentMarker != null) mCurrentMarker!!.remove()
+            mCurrentMarker = mMap!!.addMarker(MarkerOptions()
+                    .position(latLng)
+                    .title(getString(R.string.conditions_label))
+                    .snippet(place))
+            mCurrentMarker!!.showInfoWindow()
+            mMap!!.setOnInfoWindowClickListener(this@ForecastFragment)
+        }
+    }
+
+//    private fun setMapPrefs(latitude: Double, longitude: Double) {
+//        val editor = mPreferences!!.edit()
+//        editor.putString(EXTRA_TIDE_QUERY_DATE, FloVindDateUtils.getPersistentDateFromMillis(System.currentTimeMillis()))
+//        editor.putString(FORECAST_LATITUDE_KEY, latitude.toString())
+//        editor.putString(FORECAST_LONGITUDE_KEY, longitude.toString())
+//        editor.apply()
+//    }
+
     override fun onInfoWindowClick(marker: Marker) {
         locationBtnCliked = true
+        LAT_LNG_FORECAST = LatLng(marker.position.latitude, marker.position.longitude)
 
-        val editor = mPreferences!!.edit()
-        editor.putString(EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis()))
-        editor.putString(EXTRA_LATITUDE, marker.position.latitude.toString())
-        editor.putString(EXTRA_LONGITUDE, marker.position.longitude.toString())
-        editor.apply()
+//        setMapPrefs(marker.position.latitude, marker.position.longitude)
 
-        updateValuesOnLocationChange(false)
+        updateValuesOnLocationChange(LAT_LNG_FORECAST!!)
         marker.hideInfoWindow()
     }
 
@@ -489,7 +447,9 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         locationBtnCliked = true
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
-        updateValuesOnLocationChange(homeLocation = true)
+        mPreferences?.edit()?.putString(EXTRA_TIDE_QUERY_DATE, FloVindDateUtils.getPersistentDateFromMillis(System.currentTimeMillis()))?.apply()
+        LAT_LNG_FORECAST = LAT_LNG_HOME
+        updateValuesOnLocationChange(LAT_LNG_FORECAST!!)
 
         return false
     }
@@ -498,14 +458,18 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     override fun onSaveInstanceState(outState: Bundle) {
         // Store the selected map style, so we can assign it when the activity resumes.
         //   outState.putInt(SELECTED_STYLE, mSelectedStyleId);
-        if (mMap != null) outState.putFloat(MAP_ZOOM, mMap!!.cameraPosition.zoom)
-        // outState.putParcelable(LOCATION, mLocation);
-        if (LAT_LNG != null) {
-            outState.putDouble(EXTRA_LATITUDE, LAT_LNG!!.latitude)
-            outState.putDouble(EXTRA_LONGITUDE, LAT_LNG!!.longitude)
+
+        if (mMap != null) {
+            Timber.d("savingState zoom: ${mMap!!.cameraPosition.zoom}")
+            outState.putFloat(MAP_ZOOM, mMap!!.cameraPosition.zoom)
         }
+        // outState.putParcelable(LOCATION, mLocation);
+//        if (LAT_LNG_FORECAST != null) { // TODO Useful still?
+//            outState.putDouble(FORECAST_LATITUDE_KEY, LAT_LNG_FORECAST!!.latitude)
+//            outState.putDouble(FORECAST_LONGITUDE_KEY, LAT_LNG_FORECAST!!.longitude)
+//        }
         //outState.putString(PLACE_NAME, mLocationTextView.getText().toString());
-        outState.putInt(CONTAINER_VISIBILITY, mContainer.visibility)
+//        outState.putInt(CONTAINER_VISIBILITY, mContainer.visibility)
         super.onSaveInstanceState(outState)
     }
 
@@ -568,11 +532,13 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         private const val LOADER_ID_WINDS = 1350
         private const val LOADER_ID_RISE_SET = 1351
 
-        val TIDES_PROJECTION = arrayOf(DbContract.TidesEntry.COLUMN_TIDES_DATE, DbContract.TidesEntry.COLUMN_WATER_LEVEL, DbContract.TidesEntry.COLUMN_LEVEL_FLAG, DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL, DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG)
+        val TIDES_PROJECTION = arrayOf(DbContract.TidesEntry.COLUMN_TIDES_DATE, DbContract.TidesEntry.COLUMN_WATER_LEVEL, DbContract.TidesEntry.COLUMN_LEVEL_FLAG, DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL, DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG, DbContract.TidesEntry.COLUMN_TIDES_DATE_RAW)
+        const val INDEX_TIDE_DATE = 0
         const val INDEX_TIDE_LEVEL = 1
         const val INDEX_LEVEL_TIME = 3
         const val INDEX_FLAG = 2
         const val INDEX_ERROR = 4
+        const val INDEX_TIDE_DATE_RAW = 5
 
         val WINDS_PROJECTION = arrayOf(DbContract.WindsEntry.COLUMN_WINDS_DATE, DbContract.WindsEntry.COLUMN_TIME_OF_WIND, DbContract.WindsEntry.COLUMN_WIND_DIR_DEG, DbContract.WindsEntry.COLUMN_WIND_SPEED, DbContract.WindsEntry.COLUMN_WIND_DIRECTION)
         const val INDEX_WIND_TIME = 1
@@ -591,7 +557,8 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         private const val CONTAINER_VISIBILITY = "visibility"
 
         private const val MAP_ZOOM_DEFAULT = 8f
-        private var LAT_LNG: LatLng? = null
+        private var LAT_LNG_FORECAST: LatLng? = null
+        private var LAT_LNG_HOME: LatLng? = null
 
         fun newInstance(location: Location): ForecastFragment {
             val args = Bundle()

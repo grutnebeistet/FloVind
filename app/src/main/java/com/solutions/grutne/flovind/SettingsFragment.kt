@@ -1,16 +1,15 @@
 package com.solutions.grutne.flovind
 
-import android.app.PendingIntent.getActivity
-import com.solutions.grutne.flovind.sync.SyncUtils
 import timber.log.Timber
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.v7.preference.CheckBoxPreference
 import android.support.v7.preference.ListPreference
 import android.support.v7.preference.Preference
 import android.support.v7.preference.PreferenceFragmentCompat
-import android.support.v7.preference.PreferenceScreen
+import com.solutions.grutne.flovind.utils.NotificationUtils
 
 
 /**
@@ -27,7 +26,7 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         val count = preferenceScreen.preferenceCount
         for (i in 0 until count) {
             val p = preferenceScreen.getPreference(i)
-            if (p !is android.support.v7.preference.CheckBoxPreference) {
+            if (p !is CheckBoxPreference) {
                 val value = sharedPreferences.getString(p.key, "")
                 setPreferenceSummary(p, value)
             }
@@ -60,15 +59,27 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
 
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, s: String) {
-        Timber.d("onSharedPreferenceChanged, string: " + s)
-        if (s == getString(R.string.notify_hours_key) || s == getString(R.string.pref_enable_notifications_key)) {
-            SyncUtils.startImmediateSync(context!!) // TODO instead of parsing again, just query in make notifics
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        if (context == null) return
+
+        Timber.d("onSharedPreferenceChanged, key:$key ")
+        if (key == getString(R.string.notify_hours_key)) {
+            NotificationUtils.updateNotificationOnOffsetChange(context!!.applicationContext)
+        } else if (key == getString(R.string.pref_enable_notifications_key)) {
+            val enableNotification = sharedPreferences.getBoolean(key, false)
+            val prefOffset = PreferenceManager.getDefaultSharedPreferences(context).getString(
+                    context!!.getString(R.string.notify_hours_key), context!!.getString(R.string.notify_hours_default))
+
+            if (enableNotification) {
+                NotificationUtils.prepareNotification(context!!.applicationContext, userOffset = prefOffset!!.toInt())
+            } else {
+                NotificationUtils.cancelNotification(context!!.applicationContext)
+            }
         }
-        val preference = findPreference(s)
+        val preference = findPreference(key)
         if (null != preference) {
-            if (preference !is android.support.v7.preference.CheckBoxPreference) {
-                setPreferenceSummary(preference, sharedPreferences.getString(s, ""))
+            if (preference !is CheckBoxPreference) {
+                setPreferenceSummary(preference, sharedPreferences.getString(key, ""))
             }
         }
     }

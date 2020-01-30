@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.solutions.grutne.flovind.R
 import com.solutions.grutne.flovind.ForecastFragment
+import timber.log.Timber
 
 import java.util.*
 

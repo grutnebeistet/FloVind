@@ -1,4 +1,5 @@
 package com.solutions.grutne.flovind.utils
+
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -27,9 +28,11 @@ class AlarmReceiver : BroadcastReceiver() {
 
     @Throws(NullPointerException::class)
     override fun onReceive(context: Context, intent: Intent?) {
+        Timber.d("onReceive")
 
-        val nextLowTideTime = intent!!.getLongExtra("nextLowTideTime", 0)
-        val nextHighTideTime = intent.getStringExtra("nextHighTideTime")
+        val nextLowTideTime = intent?.getStringExtra("nextLowTideTime")
+        val nextLowTideLevel = intent?.getStringExtra("nextLowTideLevel")
+//        val nextHighTideTime = intent.getStringExtra("nextHighTideTime")
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -43,22 +46,15 @@ class AlarmReceiver : BroadcastReceiver() {
             notificationChannel.enableVibration(true)
             notificationManager.createNotificationChannel(notificationChannel)
         }
-        val timeLeft = Utils.getRemainingTime(nextLowTideTime)
-        val titleMessage: String
-        if (timeLeft.get(0) == '-') {
-            titleMessage = "Tide was lowest " + timeLeft.substring(1) + " ago"
-        } else
-            titleMessage = timeLeft + " until tide bottom"
 
         val notificationBuilder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
                 .setVibrate(longArrayOf(0, 100, 100, 100, 100, 100))
                 .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                 .setColor(ContextCompat.getColor(context, R.color.colorAccent))
                 .setSmallIcon(R.drawable.common_google_signin_btn_icon_light)
-                .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.drawable.abc_btn_check_to_on_mtrl_015))
-                .setContentTitle("Tide alert! " + titleMessage)
-                .setContentText("Lowest point at " + Utils.getTime(nextLowTideTime) +
-                        if (nextHighTideTime != null) ". Following peak at " + Utils.getFormattedTime(nextHighTideTime) else ".")
+                .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.drawable.common_google_signin_btn_icon_light))
+                .setContentTitle("Tide alert! ")
+                .setContentText("Next low tide $nextLowTideTime. Level $nextLowTideLevel")
                 .setAutoCancel(true)
 
         val activityIntent = Intent(context, MainActivity::class.java)
@@ -75,16 +71,14 @@ class AlarmReceiver : BroadcastReceiver() {
         if (notificationsEnabled)
             try {
                 notificationManager.notify(TIDES_NOTIFICATION_ID, notificationBuilder.build())
-                // TODO if notification not read/still visible - update time left to next tide (update notify)
             } catch (e: NullPointerException) {
                 Timber.d("failed notifying: " + e.message)
                 e.printStackTrace()
             }
-
     }
 
     companion object {
-        private val TIDES_NOTIFICATION_ID = 1349
-        private val NOTIFICATION_CHANNEL_ID = "my_notification_channel"
+        private const val TIDES_NOTIFICATION_ID = 1349
+        private const val NOTIFICATION_CHANNEL_ID = "my_notification_channel"
     }
 }

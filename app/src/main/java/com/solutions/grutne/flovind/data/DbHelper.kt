@@ -13,7 +13,8 @@ class TidesDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME,
                 DbContract.TidesEntry.COLUMN_LEVEL_FLAG + " TEXT, " +
                 DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL + " TEXT, " +
                 DbContract.TidesEntry.COLUMN_WATER_LEVEL + " TEXT, " +
-                DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG + " TEXT " +
+                DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG + " TEXT, " +
+                DbContract.TidesEntry.COLUMN_TIDES_DATE_RAW + " TEXT " +
                 ");"
 
         val SQL_CREATE_WINDS_TABLE = "CREATE TABLE " + DbContract.WindsEntry.TABLE_WINDS + " (" +

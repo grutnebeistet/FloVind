@@ -4,100 +4,128 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.database.Cursor
+import android.database.sqlite.SQLiteException
 import android.os.Build
 import android.preference.PreferenceManager
+import android.widget.Toast
+import com.solutions.grutne.flovind.ForecastFragment
 import com.solutions.grutne.flovind.R
-import com.solutions.grutne.flovind.models.TidesData
+import com.solutions.grutne.flovind.data.DbContract
+import com.solutions.grutne.flovind.data.TidesDbHelper
+import org.threeten.bp.format.DateTimeParseException
 
-import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 import timber.log.Timber
 
 /**
  * Created by Adrian on 29/10/2017.
+ *
+ * Create, cancel, or update an AlarmManager to push a notification
  */
 
 object NotificationUtils {
-    private val PREVIOUS_NOTIFICATION_TIME = "prev_not"
-    private val PREVIOUS_NOTIFICATION_OFFSET = "prev_offset"
+    private const val PREVIOUS_NOTIFICATION_TIME = "prev_not"
+    private const val PREVIOUS_NOTIFICATION_OFFSET = "prev_offset"
+    private const val TIDES_NOTIFICATION_OFFSET_REQUEST_CODE = 1200
 
-    fun prepareNotification(context: Context, waterlevels: List<TidesData.Waterlevel>) {
-        // get next low tide to notify about
-        var nextLow: TidesData.Waterlevel? = null
-        var nextHighAfterLow: TidesData.Waterlevel? = null
-        for (i in waterlevels.indices) {
-            val l = waterlevels[i]
-            if (l.flag.equals("low") && Utils.timeIsAfterNowInclMidnight(l.dateTime)) {// Utils.timeIsAfterNow(Utils.getFormattedTime(l.dateTime))) {
-                //  nextLow = (nextLow == null || (l.dateTime.compareTo(nextLow.dateTime) < 0) ? l : nextLow);
-                if (nextLow == null || l.dateTime.compareTo(nextLow.dateTime) < 0) {
-                    nextLow = l
-                    if (waterlevels.size > i + 1) nextHighAfterLow = waterlevels[i + 1]
+
+    fun updateNotificationOnOffsetChange(context: Context) {
+        // if current home loc is different than already made notification's home loc,
+//        prepareNotification(context)
+        Timber.d("UpdateNotification")
+        // else update offset
+    }
+
+    fun cancelNotification(context: Context) {
+        val intent = Intent(context, AlarmReceiver::class.java) // TODO Trengs exact samme intent som setAlarm brukte?
+        val pendingIntent = PendingIntent.getBroadcast(context, TIDES_NOTIFICATION_OFFSET_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        alarmManager.cancel(pendingIntent)
+    }
+
+    //     TODO thread safe
+    /**
+     * Prepare a new Notification and alarm for each low tide after now until last tide in batch.
+     *
+     * @param context
+     * @param userOffset, integer hours prior to tide
+     * */
+    fun prepareNotification(context: Context, userOffset: Int) {
+
+        val sortOrder = DbContract.TidesEntry.COLUMN_TIDES_DATE + " ASC"
+//        val selection = "${DbContract.TidesEntry.COLUMN_TIDES_DATE} =? OR ${DbContract.TidesEntry.COLUMN_TIDES_DATE} =?"
+//        val selectionArgs = arrayOf(Utils.getPrettyDateFromMs(System.currentTimeMillis()), Utils.getPrettyDatePlusOne(System.currentTimeMillis()))
+
+        try {
+            TidesDbHelper(context).readableDatabase.query(
+                    DbContract.TidesEntry.TABLE_TIDES,
+                    ForecastFragment.TIDES_PROJECTION,
+//                selection,
+                    null,
+//                selectionArgs,
+                    null,
+                    null,
+                    null,
+                    sortOrder).use {
+
+                while (it.moveToNext()) {
+                    val flag = it.getString(ForecastFragment.INDEX_FLAG)
+                    val date = it.getString(ForecastFragment.INDEX_TIDE_DATE)
+                    val time = it.getString(ForecastFragment.INDEX_LEVEL_TIME)
+                    val level = it.getString(ForecastFragment.INDEX_TIDE_LEVEL)
+                    val rawDate = it.getString(ForecastFragment.INDEX_TIDE_DATE_RAW)
+
+                    val levelText = context.getString(R.string.level_format, level)
+
+
+                    val lowTideEpoch = FloVindDateUtils.getRawDateTimeInMillis(rawDate)
+
+                    Timber.d("flag: $flag\ndate: $date\ntime: $time\nlevel: $levelText\nAfterNowIncl ${lowTideEpoch > System.currentTimeMillis()}")
+                    if (flag == "low" && lowTideEpoch > System.currentTimeMillis()) {//{Utils.timeIsAfterNowInclMidnight(rawDate)) {
+                        // nextLow = time - currentT
+
+                        val millisUntilLow = lowTideEpoch - System.currentTimeMillis()
+
+                        // if next low is less than @param userOffset -> popup msg: "Next low for $locationName is already in <hh:mm>. You will not be notified until next..." TODO
+                        if (TimeUnit.MILLISECONDS.toHours(millisUntilLow) < userOffset) {
+                            Toast.makeText(context, "Next low is less than $userOffset!!", Toast.LENGTH_LONG).show()
+                            continue
+                        }
+
+                        val notificationTime = lowTideEpoch - TimeUnit.HOURS.toMillis(userOffset.toLong())
+
+
+                        val myIntent = Intent(context, AlarmReceiver::class.java)
+                        myIntent.putExtra("nextLowTideTime", time)
+                        myIntent.putExtra("nextLowTideLevel", level)
+
+                        val pendingIntent = PendingIntent.getBroadcast(context, TIDES_NOTIFICATION_OFFSET_REQUEST_CODE, myIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+                        val SDK_INT = Build.VERSION.SDK_INT
+                        if (SDK_INT >= Build.VERSION_CODES.M)
+                            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, notificationTime, pendingIntent)
+                        else if (Build.VERSION_CODES.KITKAT <= SDK_INT && SDK_INT < Build.VERSION_CODES.M)
+                            alarmManager.setExact(AlarmManager.RTC_WAKEUP, notificationTime, pendingIntent)
+                        else
+                            alarmManager.set(AlarmManager.RTC_WAKEUP, notificationTime, pendingIntent)
+
+                    }
+
+                    // if last date -> setup new job to prepareNotification for the next week
+                    if (it.isLast) {
+                        Timber.d("Last record: Flag: $flag\ndate: $date\ntime: $time\nlevel: $levelText")
+                    }
                 }
             }
-        }
-        if (nextLow != null) {
-
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-            // In case lowtide is after midnight, date must be considered
-            val lowTideDateString = Utils.getFormattedDate(nextLow.dateTime)
-            val lowTideTimeString = Utils.getFormattedTime(nextLow.dateTime)
-
-            val calendarLowTide = Calendar.getInstance()
-
-            calendarLowTide.set(Calendar.YEAR, Integer.valueOf(lowTideDateString.substring(0, 4))!!)
-            calendarLowTide.set(Calendar.MONTH, Integer.valueOf(lowTideDateString.substring(5, 7))!! - 1) // months are counted from 0
-            calendarLowTide.set(Calendar.DATE, Integer.valueOf(lowTideDateString.substring(8))!!)
-            calendarLowTide.set(Calendar.HOUR_OF_DAY, Integer.valueOf(lowTideTimeString.substring(0, 2))!!)
-            calendarLowTide.set(Calendar.MINUTE, Integer.valueOf(lowTideTimeString.substring(3, 5))!!)
-            Timber.d("Date from calendar thing: " + calendarLowTide.time + "\nvia utils: " +
-                    Utils.getDate(calendarLowTide.timeInMillis) + " " + Utils.getTime(calendarLowTide.timeInMillis))
-
-            val currentTime = System.currentTimeMillis()
-            val lowTideTime = calendarLowTide.timeInMillis
-            val hoursOffsetPrefs = PreferenceManager.getDefaultSharedPreferences(context).getString(
-                    context.getString(R.string.notify_hours_key), context.getString(R.string.notify_hours_default))
-            Timber.d("NOTIFY OFFSET PREF: " + hoursOffsetPrefs!!)
-            val offset = TimeUnit.HOURS.toMillis(Integer.parseInt(hoursOffsetPrefs).toLong())
-            val offsetMargin = TimeUnit.MINUTES.toMillis(1)
-            var notificationTime = lowTideTime - offset + offsetMargin
-
-            // set notification time to one minute from now if it's less than 3 hours till low tide
-            //if ((notificationTime + offsetMargin) < notificationTime); //;(calendarLowTide.getTimeInMillis() - offset)))
-            if (currentTime + offset > lowTideTime)
-                notificationTime = currentTime// + offsetMargin;
-
-            val myIntent = Intent(context, AlarmReceiver::class.java)   //(AlarmReceiver.INTENT_FILTER);
-            myIntent.putExtra("nextLowTideTime", lowTideTime)
-            myIntent.putExtra("nextLowTideLevel", nextLow.waterValue)
-
-            if (nextHighAfterLow != null) {
-                myIntent.putExtra("nextHighTideTime", nextHighAfterLow.dateTime)
-                myIntent.putExtra("nextHighTideLevel", nextHighAfterLow.waterValue)
-            }
-
-            val pendingIntent = PendingIntent.getBroadcast(context, 0, myIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-            // PendingIntent.FLAG_CANCEL_CURRENT);  // FLAG to avoid creating a second service if there's already one running
-
-            // Prepare notification only if it hasn't already been shown for this low tide
-            val preferences = PreferenceManager.getDefaultSharedPreferences(context)
-            val previousNotificationTime = preferences.getLong(PREVIOUS_NOTIFICATION_TIME, 0)
-            val previousNotificationOffset = preferences.getString(PREVIOUS_NOTIFICATION_OFFSET, "0")
-
-            Timber.d("Previous time: $previousNotificationTime, newtime: $notificationTime")
-            if (!(Utils.getTime(previousNotificationTime) == (Utils.getTime(lowTideTime)) && hoursOffsetPrefs == previousNotificationOffset)) {
-                val SDK_INT = Build.VERSION.SDK_INT
-                if (SDK_INT >= Build.VERSION_CODES.M)
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, notificationTime, pendingIntent)
-                else if (Build.VERSION_CODES.KITKAT <= SDK_INT && SDK_INT < Build.VERSION_CODES.M)
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, notificationTime, pendingIntent)
-                else
-                    alarmManager.set(AlarmManager.RTC_WAKEUP, notificationTime, pendingIntent)
-
-                Timber.d("New alarm set for " + Utils.getTime(notificationTime))
-                preferences.edit().putLong(PREVIOUS_NOTIFICATION_TIME, lowTideTime).putString(PREVIOUS_NOTIFICATION_OFFSET, hoursOffsetPrefs).apply()
-            }
+        } catch (sle: SQLiteException) {
+            Timber.e("Failed to retrieve database: ${sle.localizedMessage}")
+        } catch (dtpe: DateTimeParseException) {
+            Timber.e("Failed to parse epoch time: ${dtpe.localizedMessage}")
         }
     }
 }

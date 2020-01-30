@@ -6,13 +6,17 @@ import android.content.SharedPreferences
 import android.preference.PreferenceManager
 
 import com.firebase.jobdispatcher.Constraint
-import com.firebase.jobdispatcher.Driver
 import com.firebase.jobdispatcher.FirebaseJobDispatcher
 import com.firebase.jobdispatcher.GooglePlayDriver
-import com.firebase.jobdispatcher.Job
 import com.firebase.jobdispatcher.Lifetime
 import com.firebase.jobdispatcher.RetryStrategy
 import com.firebase.jobdispatcher.Trigger
+import com.solutions.grutne.flovind.MainActivity
+import com.solutions.grutne.flovind.MainActivity.Companion.DEFAULT_LAT
+import com.solutions.grutne.flovind.MainActivity.Companion.DEFAULT_LON
+import com.solutions.grutne.flovind.MainActivity.Companion.HOME_LAT_KEY
+import com.solutions.grutne.flovind.MainActivity.Companion.HOME_LON_KEY
+import com.solutions.grutne.flovind.utils.Utils
 
 import java.util.concurrent.TimeUnit
 
@@ -69,7 +73,7 @@ object SyncUtils {
 
         scheduleFirebaseJobDispatcher(context)
 
-        val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+
         //      if (preferences.getString("nextLowTideTime", null) == null) {
         startImmediateSync(context)
         //        }

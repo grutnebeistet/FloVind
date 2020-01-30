@@ -28,6 +28,7 @@ object DbContract {
             const val COLUMN_TIME_OF_LEVEL = "level_time"
             const val COLUMN_LEVEL_FLAG = "level_flag"
             const val COLUMN_TIDE_ERROR_MSG = "error"
+            const val COLUMN_TIDES_DATE_RAW = "tide_date_raw"
         }
     }
 

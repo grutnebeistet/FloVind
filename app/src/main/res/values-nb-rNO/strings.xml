@@ -34,7 +34,8 @@
     <string name="style_set_to">Stil satt til: %1$s</string>
     <string name="pref_enable_notifications_false">Ikke aktivert</string>
     <string name="pref_enable_notifications_true">Aktivert</string>
-    <string name="pref_enable_notifications_label">Send varsler</string>
+    <string name="pref_enable_notifications_low_label">Varsel fjære</string>
+    <string name="pref_enable_notifications_high_label">Varsel flo</string>
     <string name="offset_label">I forkant av fjære</string>
     <string name="one_hour">Èn time før</string>
     <string name="two_hours">To timer før</string>

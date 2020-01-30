@@ -38,5 +38,5 @@
         app:layout_constraintBottom_toBottomOf="@id/setting_icon"
         app:layout_constraintLeft_toRightOf="@id/setting_icon"
         app:layout_constraintTop_toTopOf="@id/setting_icon"
-        android:text="17:00" />
+    />
 </android.support.constraint.ConstraintLayout>

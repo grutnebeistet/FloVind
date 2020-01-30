@@ -54,18 +54,12 @@ class TidesXmlParser {
                 error.put(DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG, parser.text)
                 error.put(DbContract.TidesEntry.COLUMN_TIDES_DATE,
                         preferences.getString(EXTRA_TIDE_QUERY_DATE,
-                                Utils.getDate(System.currentTimeMillis())))
+                                FloVindDateUtils.getPersistentDateFromMillis(System.currentTimeMillis())))
                 tidesValues[0] = error
                 return tidesValues
             }
         }
         parser.require(XmlPullParser.START_TAG, ns, "tide")
-
-        var info: String? = null
-        var stationName: String? = null
-        var stationCode: String? = null
-        var latitude: String? = null
-        var longitude: String? = null
 
         while (parser.next() != XmlPullParser.END_TAG) {
             if (parser.eventType != XmlPullParser.START_TAG) {
@@ -79,41 +73,16 @@ class TidesXmlParser {
                     error.put(DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG, parser.getAttributeValue(0))
                     error.put(DbContract.TidesEntry.COLUMN_TIDES_DATE,
                             preferences.getString(EXTRA_TIDE_QUERY_DATE,
-                                    Utils.getDate(System.currentTimeMillis())))
+                                    FloVindDateUtils.getPersistentDateFromMillis(System.currentTimeMillis())))
                     tidesValues[0] = error
                     return tidesValues
                 }
             }
             if (parser.name == "service") {
-//                if (parser.getAttributeName(0) == "info" || parser.getAttributeName(0) == "cominfo") {
-//                    tidesValues = arrayOfNulls(1)
-//                    val error = ContentValues()
-//                    error.put(DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG, parser.getAttributeValue(0))
-//                    error.put(DbContract.TidesEntry.COLUMN_TIDES_DATE,
-//                            preferences.getString(EXTRA_TIDE_QUERY_DATE,
-//                                    Utils.getDate(System.currentTimeMillis())))
-//                    tidesValues[0] = error
-//                    return tidesValues
-//                }
                 parser.nextTag()
             }
-            if (parser.name == "location") {
-                val attributeCount = parser.attributeCount
-                for (i in 0 until attributeCount) {
-                    val attrName = parser.getAttributeName(i)
-                    val attrValue = parser.getAttributeValue(i)
-                    Timber.d("Attr Value: " + attrValue)
-                    when (attrName) {
-                        "name" -> stationName = attrValue
-                        "code" -> stationCode = attrValue
-                        "latitude" -> latitude = attrValue
-                        "longitude" -> longitude = attrValue
-                    }
-                }
-            }
         }
-        // Start parsing from data tag
-        val dataType: String? = null
+
         var waterValue: String
         var atTime: String
         var flag: String
@@ -141,32 +110,19 @@ class TidesXmlParser {
                     parser.nextTag()
                 }
 
-                // prepare notification only if parsed area is actual location
-                // No point in checking levels beyond the first 6, regarding notification
-                val homeLat = preferences.getString(
-                        MainActivity.HOME_LAT,"")
-                val homeLong = preferences.getString(
-                        MainActivity.HOME_LON,"")
-
-                Timber.d("Parsing hydrographiics...")
-                // and only if the data being parsed is from users actual (home) location
-                if (latitude != null && longitude != null &&
-                        latitude.substring(0, 7) == homeLat!!.substring(0, 7)
-                        && longitude.substring(0, 7) == homeLong!!.substring(0, 7))
-                    NotificationUtils.prepareNotification(mContext!!.applicationContext, waterlevels.subList(0, 6))
-
                 tidesValues = arrayOfNulls(waterlevels.size)
 
                 for (i in waterlevels.indices) {
                     val values = ContentValues()
                     values.put(DbContract.TidesEntry.COLUMN_TIDES_DATE,
-                            Utils.getFormattedDate(waterlevels[i].dateTime))
+                            FloVindDateUtils.getFormattedDate(waterlevels[i].dateTime))
                     values.put(DbContract.TidesEntry.COLUMN_WATER_LEVEL,
                             waterlevels[i].waterValue)
                     values.put(DbContract.TidesEntry.COLUMN_LEVEL_FLAG,
                             waterlevels[i].flag)
                     values.put(DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL,
-                            Utils.getFormattedTime(waterlevels[i].dateTime))
+                            FloVindDateUtils.getFormattedTime(waterlevels[i].dateTime))
+                    values.put(DbContract.TidesEntry.COLUMN_TIDES_DATE_RAW, waterlevels[i].dateTime)
                     tidesValues[i] = values
                 }
                 return tidesValues
@@ -176,7 +132,6 @@ class TidesXmlParser {
             }
         }
         return null
-        //return new TidesData(stationName, stationCode, latitude, longitude, dataType, waterlevels, null);
     }
 
     @Throws(XmlPullParserException::class, IOException::class)

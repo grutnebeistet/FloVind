@@ -14,8 +14,11 @@ class WeatherDataProvider : ContentProvider() {
     private var mDbHelper: TidesDbHelper? = null
 
     override fun onCreate(): Boolean {
-        mDbHelper = TidesDbHelper(context)
-        return true
+        if (context != null) {
+            mDbHelper = TidesDbHelper(context!!)
+            return true
+        }
+        return false
     }
 
     override fun query(uri: Uri, projection: Array<String>?, selection: String?, selArgs: Array<String>?, sortOrder: String?): Cursor? {
@@ -114,7 +117,7 @@ class WeatherDataProvider : ContentProvider() {
                 table = DbContract.WindsEntry.TABLE_WINDS
                 Timber.d("bulking WINDS")
             }
-            RISE_SETS ->{
+            RISE_SETS -> {
                 table = DbContract.RiseSetEntry.TABLE_RISE_SET
             }
             else -> return super.bulkInsert(uri, values)

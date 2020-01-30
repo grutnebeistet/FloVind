@@ -39,7 +39,7 @@
             android:key="@string/pref_enable_notifications_key"
             android:summaryOff="@string/pref_enable_notifications_false"
             android:summaryOn="@string/pref_enable_notifications_true"
-            android:title="@string/pref_enable_notifications_label" />
+            android:title="@string/pref_enable_notifications_low_label" />
 
         <ListPreference
             android:defaultValue="@string/notify_hours_default"

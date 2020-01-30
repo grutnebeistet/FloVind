@@ -4,10 +4,11 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
-import android.location.LocationProvider
 import android.net.Uri
+import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Looper
 import android.preference.PreferenceManager
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
@@ -19,11 +20,9 @@ import android.view.View
 
 import timber.log.Timber
 import android.support.design.widget.Snackbar
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.solutions.grutne.flovind.sync.SyncUtils
-import com.solutions.grutne.flovind.utils.Utils
-import kotlinx.android.synthetic.main.widget_tides.*
+import com.solutions.grutne.flovind.utils.FloVindDateUtils
 
 
 internal class MainActivity : AppCompatActivity() {
@@ -40,10 +39,11 @@ internal class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         setContentView(R.layout.activity_main)
-        Timber.plant(Timber.DebugTree())
+
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         // toolbar.setBackgroundColor(Color.BLUE)
         setSupportActionBar(toolbar)
@@ -53,17 +53,6 @@ internal class MainActivity : AppCompatActivity() {
             requestPermissions()
         } else
             getLastLocation()
-
-        // if not google play:
-        // val locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-        // val location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-
-        /*       if (mToolbar != null) {
-                   setSupportActionBar(mToolbar)
-                   supportActionBar!!.setDisplayShowTitleEnabled(false)
-               }*/
-
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -71,22 +60,30 @@ internal class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
+    private val mLocationCallback: LocationCallback? = object : LocationCallback() {
+        override fun onLocationResult(p0: LocationResult?) {
+            if (p0?.lastLocation != null) {
+                mLastLocation = p0.lastLocation
+
+                Timber.d("onLocationResult set new last location")
+            }
+        }
+    }
 
     private fun getLastLocation() {
+        val locationRequest = LocationRequest()
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            mFusedLocationClient?.requestLocationUpdates(locationRequest, mLocationCallback, Looper.myLooper())
+        }
+
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val editor = preferences.edit()
         mFusedLocationClient!!.lastLocation
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful && task.result != null) {
                         mLastLocation = task.result
-
-
-                        // TODO  convert to doubleToRawLongBits
-                        /*            editor.putString(EXTRA_LATITUDE, String.valueOf(mLastLocation.getLatitude()));
-                        editor.putString(EXTRA_LONGITUDE, String.valueOf(mLastLocation.getLongitude()));*/
-//                        editor.putString(HOME_LAT, task.result.latitude.toString())
-//                        editor.putString(HOME_LON, task.result.longitude.toString())
-//                        editor.apply()
 
                         SyncUtils.initialize(this@MainActivity)
 
@@ -96,13 +93,9 @@ internal class MainActivity : AppCompatActivity() {
                     if (mLastLocation == null)
                         mLastLocation = getDefaultLocation()
 
-
-                    editor.putString(HOME_LAT, mLastLocation!!.latitude.toString())
-                    editor.putString(HOME_LON, mLastLocation!!.longitude.toString())
-//                    editor.apply()
-                    editor.putString(EXTRA_LATITUDE, mLastLocation!!.latitude.toString())
-                    editor.putString(EXTRA_LONGITUDE, mLastLocation!!.longitude.toString())
-                    editor.putString(ForecastFragment.EXTRA_TIDE_QUERY_DATE, Utils.getDate(System.currentTimeMillis()))
+                    editor.putString(HOME_LAT_KEY, mLastLocation!!.latitude.toString())
+                    editor.putString(HOME_LON_KEY, mLastLocation!!.longitude.toString())
+                    editor.putString(ForecastFragment.EXTRA_TIDE_QUERY_DATE, FloVindDateUtils.getPersistentDateFromMillis(System.currentTimeMillis()))
                     editor.apply()
 
                     val tFrag = ForecastFragment.newInstance(mLastLocation!!)
@@ -115,8 +108,8 @@ internal class MainActivity : AppCompatActivity() {
     // Coordinates for Oslo
     private fun getDefaultLocation(): Location {
         val location = Location("")
-        location.latitude = 59.9139
-        location.longitude = 10.7522
+        location.latitude = DEFAULT_LAT
+        location.longitude = DEFAULT_LON
         return location
     }
 
@@ -138,19 +131,19 @@ internal class MainActivity : AppCompatActivity() {
 
     private fun checkPermissions(): Boolean {
         val permissionState = ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION)
+                Manifest.permission.ACCESS_FINE_LOCATION)
         return permissionState == PackageManager.PERMISSION_GRANTED
     }
 
     private fun startLocationPermissionRequest() {
         ActivityCompat.requestPermissions(this@MainActivity,
-                arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 REQUEST_PERMISSIONS_REQUEST_CODE)
     }
 
     private fun requestPermissions() {
         val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION)
+                Manifest.permission.ACCESS_FINE_LOCATION)
 
         // Provide an additional rationale to the user. This would happen if the user denied the
         // request previously, but didn't check the "Don't ask again" checkbox.
@@ -231,11 +224,11 @@ internal class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        const val EXTRA_LATITUDE = "latitude"
-        const val EXTRA_LONGITUDE = "longitude"
         // Home location is actual GPS location, primarily used for notifactions
-        const val HOME_LAT = "home_lat"
-        const val HOME_LON = "home_lon"
+        const val HOME_LAT_KEY = "home_lat"
+        const val HOME_LON_KEY = "home_lon"
         const val LOCATION = "location"
+        const val DEFAULT_LAT = 59.9139
+        const val DEFAULT_LON = 10.7522
     }
 }

@@ -42,7 +42,8 @@
     <string name="pref_enable_notifications_key" translatable="false">enable_notify</string>
     <string name="pref_enable_notifications_false">Not Enabled</string>
     <string name="pref_enable_notifications_true">Enabled</string>
-    <string name="pref_enable_notifications_label">Push Notifications</string>
+    <string name="pref_enable_notifications_low_label">Notify next low tide</string>
+    <string name="pref_enable_notifications_high_label">Notify next low tide</string>
     <string name="offset_label">Low Tide offset</string>
     <string name="one_hour">One hour ahead</string>
     <string name="two_hours">Two hours ahead</string>

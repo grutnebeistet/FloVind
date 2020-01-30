@@ -3,11 +3,10 @@ package com.solutions.grutne.flovind.utils
 import android.content.ContentValues
 import android.util.Xml
 import com.solutions.grutne.flovind.data.DbContract
-import com.solutions.grutne.flovind.utils.NetworkUtils.NUMBER_OF_DAYS
+import com.solutions.grutne.flovind.utils.NetworkUtils.NUMBER_OF_DAYS_TO_QUERY
 
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import timber.log.Timber
 
 import java.io.IOException
 import java.io.InputStream
@@ -35,7 +34,7 @@ class YrApiXmlParser {
     @Throws(XmlPullParserException::class, IOException::class)
     private fun readRiseSetXml(parser: XmlPullParser): Array<ContentValues?>? {
         var evType = parser.eventType
-        val contentValues = arrayOfNulls<ContentValues>(NUMBER_OF_DAYS.toInt() * 4)
+        val contentValues = arrayOfNulls<ContentValues>(NUMBER_OF_DAYS_TO_QUERY* 4)
         var name: String
         var index = 0
         while (evType != XmlPullParser.END_DOCUMENT) {
@@ -132,9 +131,9 @@ class YrApiXmlParser {
                                     wind.put(DbContract.WindsEntry.COLUMN_WIND_SPEED, windSpeed)
                                     //   Timber.d("Time: " + Utils.getFormattedTime(time) + "\nDate: " + Utils.getFormattedDate(time));
                                     wind.put(DbContract.WindsEntry.COLUMN_WINDS_DATE,
-                                            Utils.getFormattedDate(time))
+                                            FloVindDateUtils.getFormattedDate(time))
                                     wind.put(DbContract.WindsEntry.COLUMN_TIME_OF_WIND,
-                                            Utils.getFormattedTime(time))
+                                            FloVindDateUtils.getFormattedTime(time))
 
                                     windsValues[index] = wind
                                     index++
