@@ -1,5 +1,6 @@
 package com.solutions.grutne.flovind.utils
 
+import android.text.format.DateFormat
 import com.solutions.grutne.flovind.utils.NetworkUtils.NUMBER_OF_DAYS_TO_QUERY
 import org.threeten.bp.*
 import org.threeten.bp.format.DateTimeFormatter
@@ -116,6 +117,15 @@ object FloVindDateUtils {
         val zdt = ZonedDateTime.ofInstant(instant, getZone())
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+        return formatter.format(zdt)
+    }
+
+    fun millisToDisplayTime(millis: Long): String {
+        val instant = Instant.ofEpochMilli(millis)
+        val zdt = ZonedDateTime.ofInstant(instant, getZone())
+
+        val formatter = DateTimeFormatter.ofPattern("kk:mm")
 
         return formatter.format(zdt)
     }

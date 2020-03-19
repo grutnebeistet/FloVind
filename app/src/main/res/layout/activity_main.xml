@@ -34,7 +34,7 @@
                 android:layout_height="30dp"
                 android:contentDescription="@string/app_name"
                 android:src="@mipmap/ic_launcher"
-                android:visibility="gone" />
+                android:visibility="visible" />
 
 
             <TextView

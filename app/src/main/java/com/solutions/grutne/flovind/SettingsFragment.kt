@@ -10,6 +10,7 @@ import android.support.v7.preference.ListPreference
 import android.support.v7.preference.Preference
 import android.support.v7.preference.PreferenceFragmentCompat
 import com.solutions.grutne.flovind.utils.NotificationUtils
+import java.util.concurrent.TimeUnit
 
 
 /**
@@ -36,14 +37,12 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
     private fun setPreferenceSummary(preference: Preference, value: Any?) {
         val stringValue = value!!.toString()
         val key = preference.key
-        Timber.d("setPreferenceSummary, value, key: $value, $key")
 
         if (preference is ListPreference) {
             /* For list preferences, look up the correct display value in */
             /* the preference's 'entries' list (since they have separate labels/values). */
             val prefIndex = preference.findIndexOfValue(stringValue)
             if (prefIndex >= 0) {
-                Timber.d("set summary: " + preference.entries[prefIndex])
                 preference.setSummary(preference.entries[prefIndex])
                 if (key == getString(R.string.pref_map_type_key))
                     findPreference(getString(R.string.map_pref_key)).isEnabled = value != getString(R.string.map_type_def_value)
@@ -63,15 +62,14 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         if (context == null) return
 
         Timber.d("onSharedPreferenceChanged, key:$key ")
-        if (key == getString(R.string.notify_hours_key)) {
-            NotificationUtils.updateNotificationOnOffsetChange(context!!.applicationContext)
-        } else if (key == getString(R.string.pref_enable_notifications_key)) {
-            val enableNotification = sharedPreferences.getBoolean(key, false)
+        if (key == getString(R.string.pref_enable_notifications_key) || key == getString(R.string.notify_hours_key)) {
+            val enableNotification = sharedPreferences.getBoolean(getString(R.string.pref_enable_notifications_key), false)
             val prefOffset = PreferenceManager.getDefaultSharedPreferences(context).getString(
                     context!!.getString(R.string.notify_hours_key), context!!.getString(R.string.notify_hours_default))
 
             if (enableNotification) {
-                NotificationUtils.prepareNotification(context!!.applicationContext, userOffset = prefOffset!!.toInt())
+                val userOffset = TimeUnit.HOURS.toMillis(prefOffset!!.toLong())
+                NotificationUtils.prepareNotification(context!!.applicationContext, userOffset = userOffset)
             } else {
                 NotificationUtils.cancelNotification(context!!.applicationContext)
             }

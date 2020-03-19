@@ -95,6 +95,8 @@ object NetworkUtils {
             inputStream = downloadUrl(url)
             if (inputStream != null)
                 tidesValues = parser.parseNearbyStation(context, inputStream)
+        } catch (e: XmlPullParserException) {
+            Timber.e(e.message)
         } finally {
             if (inputStream != null) inputStream.close()
         }
@@ -136,6 +138,7 @@ object NetworkUtils {
     // Given a string representation of a URL, sets up a connection and retrieve an InputStream
     @Throws(IOException::class)
     private fun downloadUrl(urlString: String): InputStream? {
+        Timber.d("downloadUrl $urlString")
         try {
             val url = URL(urlString)
             val conn = url.openConnection() as HttpURLConnection

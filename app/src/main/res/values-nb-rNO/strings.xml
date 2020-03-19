@@ -41,6 +41,10 @@
     <string name="two_hours">To timer før</string>
     <string name="three_hours">Tre timer før</string>
     <string name="four_hours">Fire timer før</string>
+
+    <string name="notification_low_tide_content_title" translatable="true">Varsel om fjære!</string>
+    <string name="notification_low_tide_content_text">"Havnivå er på sitt laveste kl $s.\nVannstand $s m"</string>
+
     <string name="notification_label">Varsler</string>
     <string name="map_category_label">Kart</string>
     <string name="pref_header_about">Om</string>

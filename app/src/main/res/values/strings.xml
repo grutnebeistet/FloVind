@@ -55,6 +55,9 @@
     <string name="title_version">Version</string>
     <string name="notification_label">Notifications</string>
     <string name="map_category_label">Map</string>
+
+    <string name="notification_low_tide_content_title" translatable="true">Low Tide Alert!</string>
+    <string name="notification_low_tide_content_text">"Sea level at its lowest point at $s o'clock.\nWater level: $s cm."</string>
     <!--    Content Description    -->
     <string name="content_desc_location" translatable="false">Location name</string>
     <string name="content_desc_date" translatable="false">Date</string>

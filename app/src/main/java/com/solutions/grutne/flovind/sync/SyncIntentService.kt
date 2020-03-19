@@ -14,6 +14,6 @@ class SyncIntentService : IntentService("StatsnailSyncIntentService") {
     override fun onHandleIntent(intent: Intent?) {
         Timber.d("onHandleIntent, call syncData")
         val latLng = Utils.getHomeLatLong(this)
-        FloVindSyncTask.syncData(this, latLng)
+        FloVindSyncTask.syncHomeData(this, latLng)
     }
 }

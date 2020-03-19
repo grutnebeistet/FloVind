@@ -7,6 +7,8 @@ import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 
 import timber.log.Timber
+import java.security.Permission
+import java.security.Permissions
 
 
 class WeatherDataProvider : ContentProvider() {
@@ -30,12 +32,8 @@ class WeatherDataProvider : ContentProvider() {
 
         returnCursor = when (uriMatch) {
             TIDES -> db.query(DbContract.TidesEntry.TABLE_TIDES, projection, selection, selArgs, null, null, sortOrder)
+            TIDES_HOME -> db.query(DbContract.TidesEntry.TABLE_TIDES_HOME, projection, selection, selArgs, null, null, sortOrder)
             WINDS -> db.query(DbContract.WindsEntry.TABLE_WINDS, projection, selection, selArgs, null, null, sortOrder)
-            TIDES_ID -> {
-                val idSelection = DbContract.TidesEntry.COLUMN_TIDES_ID + "=?"
-                val idSelectionArgs = arrayOf(ContentUris.parseId(uri).toString())
-                db.query(DbContract.TidesEntry.TABLE_TIDES, projection, idSelection, idSelectionArgs, null, null, sortOrder)
-            }
             RISE_SETS -> db.query(DbContract.RiseSetEntry.TABLE_RISE_SET, projection, selection, selArgs, null, null, sortOrder)
 
             else -> throw IllegalArgumentException("Cannot query given uri: " + uri)
@@ -51,6 +49,7 @@ class WeatherDataProvider : ContentProvider() {
 //        val uriMatch = mUriMatcher.match(uri)
         newRowId = when (mUriMatcher.match(uri)) {
             TIDES -> db.insert(DbContract.TidesEntry.TABLE_TIDES, null, contentValues)
+            TIDES_HOME -> db.insert(DbContract.TidesEntry.TABLE_TIDES_HOME, null, contentValues)
             WINDS -> db.insert(DbContract.WindsEntry.TABLE_WINDS, null, contentValues)
             RISE_SETS -> db.insert(DbContract.RiseSetEntry.TABLE_RISE_SET, null, contentValues)
             else -> throw IllegalArgumentException("Cannot insert for given uri: " + uri)
@@ -68,6 +67,7 @@ class WeatherDataProvider : ContentProvider() {
         val deletedRows: Int
         deletedRows = when (mUriMatcher.match(uri)) {
             TIDES -> db.delete(DbContract.TidesEntry.TABLE_TIDES, selection, selectionArgs)
+            TIDES_HOME -> db.delete(DbContract.TidesEntry.TABLE_TIDES_HOME, selection, selectionArgs)
             WINDS -> db.delete(DbContract.WindsEntry.TABLE_WINDS, selection, selectionArgs)
             TIDES_ID -> {
                 val idSelection = DbContract.TidesEntry.COLUMN_TIDES_ID + "=?"
@@ -89,6 +89,7 @@ class WeatherDataProvider : ContentProvider() {
         val rowsUpdated: Int
 
         rowsUpdated = when (mUriMatcher.match(uri)) {
+            TIDES_HOME -> db.update(DbContract.TidesEntry.TABLE_TIDES_HOME, contentValues, selection, selectionArgs)
             TIDES -> db.update(DbContract.TidesEntry.TABLE_TIDES, contentValues, selection, selectionArgs)
             WINDS -> db.update(DbContract.WindsEntry.TABLE_WINDS, contentValues, selection, selectionArgs)
             RISE_SETS -> db.update(DbContract.RiseSetEntry.TABLE_RISE_SET, contentValues, selection, selectionArgs)
@@ -98,8 +99,7 @@ class WeatherDataProvider : ContentProvider() {
                 db.update(DbContract.TidesEntry.TABLE_TIDES, contentValues, idSelection, idSelectionArgs)
             }
             else -> throw IllegalArgumentException("Cannot update for given uri " + uri)
-        }// Log.i(LOG_TAG, "updated movie");
-        //  if (rowsUpdated != 0) getContext().getContentResolver().notifyChange(uri, null);
+        }
         return rowsUpdated
     }
 
@@ -112,6 +112,10 @@ class WeatherDataProvider : ContentProvider() {
             TIDES -> {
                 table = DbContract.TidesEntry.TABLE_TIDES
                 Timber.d("bulking TIDES")
+            }
+            TIDES_HOME -> {
+                table = DbContract.TidesEntry.TABLE_TIDES_HOME
+                Timber.d("bulking TIDES HOME")
             }
             WINDS -> {
                 table = DbContract.WindsEntry.TABLE_WINDS
@@ -155,11 +159,11 @@ class WeatherDataProvider : ContentProvider() {
         private val LOG_TAG = WeatherDataProvider::class.java.simpleName
         /**
          * URI matcher codes for the content URI:
-         * TIDES for general table query
-         * TIDES_ID for query on a specific movie
          */
+
         private const val TIDES = 100
         private const val TIDES_ID = 101
+        private const val TIDES_HOME = 102
         private const val WINDS = 200
         private const val RISE_SETS = 300
 
@@ -168,11 +172,11 @@ class WeatherDataProvider : ContentProvider() {
         init {
             mUriMatcher.addURI(DbContract.CONTENT_AUTHORITY, DbContract.PATH_TIDES, TIDES)
 
+            mUriMatcher.addURI(DbContract.CONTENT_AUTHORITY, DbContract.PATH_TIDES_HOME, TIDES_HOME)
+
             mUriMatcher.addURI(DbContract.CONTENT_AUTHORITY, DbContract.PATH_WINDS, WINDS)
 
             mUriMatcher.addURI(DbContract.CONTENT_AUTHORITY, DbContract.PATH_RISE_SET, RISE_SETS)
-
-            mUriMatcher.addURI(DbContract.CONTENT_AUTHORITY, DbContract.PATH_TIDES + "/#", TIDES_ID)
         }
     }
 }

@@ -11,16 +11,22 @@ object DbContract {
     val BASE_CONTENT_URI = Uri.parse("content://$CONTENT_AUTHORITY")
 
     const val PATH_TIDES = "path_tides"
+    const val PATH_TIDES_HOME = "path_tides_home"
     const val PATH_WINDS = "path_winds"
     const val PATH_RISE_SET ="path_rise_set"
+
 
     class TidesEntry : BaseColumns {
         companion object {
             var CONTENT_URI_TIDES = BASE_CONTENT_URI.buildUpon()
                     .appendPath(PATH_TIDES)
                     .build()
+            var CONTENT_URI_TIDES_HOME = BASE_CONTENT_URI.buildUpon()
+                    .appendPath(PATH_TIDES_HOME)
+                    .build()
 
             const val TABLE_TIDES = "tides_table"
+            const val TABLE_TIDES_HOME = "tides_table_home"
 
             const val COLUMN_TIDES_ID = BaseColumns._ID
             const val COLUMN_TIDES_DATE = "tide_date"

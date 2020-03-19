@@ -80,6 +80,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
             Timber.d("onReceive ${intent.action}")
             when (intent.action) {
                 "FORECAST_INSERTED" -> {
+                    Timber.d("FORECAST_INSERTED")
                     restartLoaders()//intent.getBooleanExtra("IS_HOME_LOCATION", true)
                 }
             }
@@ -87,14 +88,12 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Timber.d("onCreate")
         super.onCreate(savedInstanceState)
-        mPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
-        initLocation()
 
-        if (savedInstanceState != null) {
-            Timber.d("retrievingsavedstate map zoom $mMapZoom")
-            mMapZoom = savedInstanceState.getFloat(MAP_ZOOM)
-        }
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
+
+        initLocation()
 
         mTidesAdapter = TidesDataAdapter(context!!)
         mWindsAdapter = WindsDataAdapter(context!!)
@@ -112,6 +111,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        Timber.d("onCreateView")
         val view = inflater.inflate(R.layout.fragment_forecast, container, false)
         mLocationButton = (view.findViewById<View>(Integer.parseInt("1")).parent as View).findViewById(Integer.parseInt("2"))
 
@@ -121,11 +121,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         mLocationTextView = view.findViewById(R.id.location_name) as TextView
         mNextDay = view.findViewById(R.id.next_day_button) as RelativeLayout
         mPrevDay = view.findViewById(R.id.prev_day_button) as RelativeLayout
-        if (savedInstanceState != null) {
-//            mVisibility = savedInstanceState.getInt(CONTAINER_VISIBILITY)
-//            mContainer.visibility = mVisibility
 
-        }
         mTidesRecyclerView = view.findViewById<RecyclerView>(R.id.tides_recycler_view) as RecyclerView
         mTidesRecyclerView.layoutManager = LinearLayoutManager(activity)
         mTidesRecyclerView.adapter = mTidesAdapter
@@ -170,17 +166,31 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        Timber.d("onViewCreated")
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        if (savedInstanceState != null) {
+            Timber.d("retrievingsavedstate map zoom $mMapZoom")
+//            mMapZoom = savedInstanceState.getFloat(MAP_ZOOM)
+        }
 
         mNextDay.setOnClickListener(onNextDayClick)
         mPrevDay.setOnClickListener(onPrevDayClick)
 
     }
 
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        Timber.d("onViewStateRestored")
+        super.onViewStateRestored(savedInstanceState)
+    }
+
     override fun onResume() {
+        Timber.d("onResume")
         super.onResume()
+        mMapZoom = mPreferences?.getString(MAP_ZOOM, mMapZoom.toString())!!.toFloat()
+
         if (!Utils.workingConnection(context!!)) { // TODO and adapter empty for day btns?
             mNextDay.visibility = View.INVISIBLE
             mPrevDay.visibility = View.INVISIBLE
@@ -196,8 +206,10 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     }
 
     override fun onPause() {
+        Timber.d("onPause")
         super.onPause()
         LocalBroadcastManager.getInstance(context!!).unregisterReceiver(mMessageReceiver)
+        mPreferences?.edit()?.putString(MAP_ZOOM, mMap!!.cameraPosition.zoom.toString())?.apply()
     }
 
     private fun showSnackBar(text: String) {
@@ -230,14 +242,20 @@ class ForecastFragment : android.support.v4.app.Fragment(),
             mErrorTextView.setText(R.string.error_unknown)
         }
 
-        activity!!.supportLoaderManager.restartLoader(LOADER_ID_TIDES, null, this)
+        Timber.d("LAT_LNG_FORECAST == LAT_LNG_HOME ${LAT_LNG_FORECAST == LAT_LNG_HOME}")
+        if (LAT_LNG_FORECAST == LAT_LNG_HOME)
+            activity!!.supportLoaderManager.restartLoader(LOADER_ID_TIDES_HOME, null, this)
+        else activity!!.supportLoaderManager.restartLoader(LOADER_ID_TIDES, null, this)
+
+//         activity!!.supportLoaderManager.restartLoader(LOADER_ID_TIDES, null, this)
+
         activity!!.supportLoaderManager.restartLoader(LOADER_ID_WINDS, null, this)
         activity!!.supportLoaderManager.restartLoader(LOADER_ID_RISE_SET, null, this)
     }
 
 
     override fun onCreateLoader(i: Int, bundle: Bundle?): android.support.v4.content.Loader<Cursor>? {
-        Timber.d("onCr Loader")
+        Timber.d("onCr Loader $i")
         val sortOrder: String
         val selection: String
 
@@ -257,6 +275,13 @@ class ForecastFragment : android.support.v4.app.Fragment(),
                 return android.support.v4.content.CursorLoader(activity!!, DbContract.TidesEntry.CONTENT_URI_TIDES,
                         TIDES_PROJECTION, selection, selectionArgs, sortOrder)
             }
+            LOADER_ID_TIDES_HOME -> {
+                sortOrder = DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL + " ASC"
+                selection = DbContract.TidesEntry.COLUMN_TIDES_DATE + "=?"
+
+                return android.support.v4.content.CursorLoader(activity!!, DbContract.TidesEntry.CONTENT_URI_TIDES_HOME,
+                        TIDES_PROJECTION, selection, selectionArgs, sortOrder)
+            }
 
             LOADER_ID_WINDS -> {
                 sortOrder = DbContract.WindsEntry.COLUMN_TIME_OF_WIND + " ASC"
@@ -274,7 +299,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
 
         when (loader.id) {
             LOADER_ID_RISE_SET -> {
-                Timber.d("Rise Set cursor: ${cursor?.count}")
+                Timber.d("onLoadFinished Rise Set count: ${cursor?.count}")
                 mContainer.sunrise_set.visibility = if (cursor == null || cursor.count > 0) View.VISIBLE else View.GONE
                 mContainer.moonrise_set.visibility = if (cursor == null || cursor.count > 0) View.VISIBLE else View.GONE
 
@@ -304,7 +329,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
                 mWindsAdapter!!.swapCursor(cursor)
 
             }
-            LOADER_ID_TIDES -> {
+            else -> {
                 when (cursor?.count) {
 
                     0 -> {
@@ -354,20 +379,19 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     private fun updateValuesOnLocationChange(latLng: LatLng) {
         val thread = Thread(Runnable { syncData(context!!, latLng) })
         thread.start()
-//        restartLoaders(homeLocation)
-
     }
 
+    private var mapInitialized: Boolean = false
     @SuppressWarnings("MissingPermission")
     override fun onMapReady(map: GoogleMap?) {
         mMap = map
-        /*     mMap.getUiSettings().setZoomControlsEnabled(true);
-        mMap.getUiSettings().setZoomGesturesEnabled(!(mVisibility == View.VISIBLE));
-        mMap.getUiSettings().setZoomGesturesEnabled(true);*/
 
         setMapClickListeners()
+
         mMap!!.isMyLocationEnabled = true
-        mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(LAT_LNG_FORECAST, mMapZoom))
+        if (!mapInitialized)
+            mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(LAT_LNG_FORECAST, mMapZoom))
+        mapInitialized = true
 
         Timber.d("Map camera set to lat: " + LAT_LNG_FORECAST!!.latitude)
 
@@ -449,29 +473,32 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         // (the camera animates to the user's current position).
         mPreferences?.edit()?.putString(EXTRA_TIDE_QUERY_DATE, FloVindDateUtils.getPersistentDateFromMillis(System.currentTimeMillis()))?.apply()
         LAT_LNG_FORECAST = LAT_LNG_HOME
-        updateValuesOnLocationChange(LAT_LNG_FORECAST!!)
+//        updateValuesOnLocationChange(LAT_LNG_FORECAST!!)
+
+        restartLoaders()
 
         return false
     }
 
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        // Store the selected map style, so we can assign it when the activity resumes.
-        //   outState.putInt(SELECTED_STYLE, mSelectedStyleId);
-
-        if (mMap != null) {
-            Timber.d("savingState zoom: ${mMap!!.cameraPosition.zoom}")
-            outState.putFloat(MAP_ZOOM, mMap!!.cameraPosition.zoom)
-        }
-        // outState.putParcelable(LOCATION, mLocation);
-//        if (LAT_LNG_FORECAST != null) { // TODO Useful still?
-//            outState.putDouble(FORECAST_LATITUDE_KEY, LAT_LNG_FORECAST!!.latitude)
-//            outState.putDouble(FORECAST_LONGITUDE_KEY, LAT_LNG_FORECAST!!.longitude)
+//    override fun onSaveInstanceState(outState: Bundle) {
+//        Timber.d("onSaveInstanceState")
+//        // Store the selected map style, so we can assign it when the activity resumes.
+//        //   outState.putInt(SELECTED_STYLE, mSelectedStyleId);
+//
+//        if (mMap != null) {
+//            Timber.d("savingState zoom: ${mMap!!.cameraPosition.zoom}")
+//            outState.putFloat(MAP_ZOOM, mMap!!.cameraPosition.zoom)
 //        }
-        //outState.putString(PLACE_NAME, mLocationTextView.getText().toString());
-//        outState.putInt(CONTAINER_VISIBILITY, mContainer.visibility)
-        super.onSaveInstanceState(outState)
-    }
+//        // outState.putParcelable(LOCATION, mLocation);
+////        if (LAT_LNG_FORECAST != null) { // TODO Useful still?
+////            outState.putDouble(FORECAST_LATITUDE_KEY, LAT_LNG_FORECAST!!.latitude)
+////            outState.putDouble(FORECAST_LONGITUDE_KEY, LAT_LNG_FORECAST!!.longitude)
+////        }
+//        //outState.putString(PLACE_NAME, mLocationTextView.getText().toString());
+////        outState.putInt(CONTAINER_VISIBILITY, mContainer.visibility)
+//        super.onSaveInstanceState(outState)
+//    }
 
 
     /**
@@ -528,6 +555,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
 
     companion object {
 
+        private const val LOADER_ID_TIDES_HOME = 1348
         private const val LOADER_ID_TIDES = 1349
         private const val LOADER_ID_WINDS = 1350
         private const val LOADER_ID_RISE_SET = 1351

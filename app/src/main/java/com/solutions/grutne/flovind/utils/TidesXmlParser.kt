@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.preference.PreferenceManager
 import android.util.Xml
-import com.solutions.grutne.flovind.MainActivity
 import com.solutions.grutne.flovind.ForecastFragment.Companion.EXTRA_TIDE_QUERY_DATE
 import com.solutions.grutne.flovind.data.DbContract
 import com.solutions.grutne.flovind.models.TidesData
@@ -27,16 +26,15 @@ class TidesXmlParser {
     private var mContext: Context? = null
 
     @Throws(XmlPullParserException::class, IOException::class)
-    fun parseNearbyStation(context: Context, `in`: InputStream): Array<ContentValues?>? {
+    fun parseNearbyStation(context: Context, inputStream: InputStream): Array<ContentValues?>? {
         mContext = context
-        try {
+
+        inputStream.use {
             val parser = Xml.newPullParser()
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
-            parser.setInput(`in`, null)
+            parser.setInput(inputStream, null)
             parser.nextTag()
             return readNearbyStationEntry(parser)
-        } finally {
-            `in`.close()
         }
     }
 
@@ -93,12 +91,14 @@ class TidesXmlParser {
         while (parser.next() != XmlPullParser.END_TAG) {
             if (parser.eventType != XmlPullParser.START_TAG) continue
             var name = parser.name
+            Timber.d("name: $name")
             if (name == "data") {
                 while (parser.next() != XmlPullParser.END_TAG) {
                     if (parser.eventType != XmlPullParser.START_TAG)
                         continue
 
                     name = parser.name
+                    Timber.d("name: $name")
                     if (name == "waterlevel") {
                         waterValue = parser.getAttributeValue(0)
                         atTime = parser.getAttributeValue(1)

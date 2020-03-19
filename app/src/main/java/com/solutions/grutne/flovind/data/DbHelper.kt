@@ -7,8 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper
 class TidesDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     override fun onCreate(sqLiteDatabase: SQLiteDatabase) {
-        val SQL_CREATE_TIDES_TABLE = "CREATE TABLE " + DbContract.TidesEntry.TABLE_TIDES + " (" +
-                DbContract.TidesEntry.COLUMN_TIDES_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        val tideTablesCommon = " (" + DbContract.TidesEntry.COLUMN_TIDES_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 DbContract.TidesEntry.COLUMN_TIDES_DATE + " TEXT, " +
                 DbContract.TidesEntry.COLUMN_LEVEL_FLAG + " TEXT, " +
                 DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL + " TEXT, " +
@@ -16,6 +15,10 @@ class TidesDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME,
                 DbContract.TidesEntry.COLUMN_TIDE_ERROR_MSG + " TEXT, " +
                 DbContract.TidesEntry.COLUMN_TIDES_DATE_RAW + " TEXT " +
                 ");"
+        val SQL_CREATE_TIDES_TABLE = "CREATE TABLE " + DbContract.TidesEntry.TABLE_TIDES + tideTablesCommon
+
+        val SQL_CREATE_TIDES_TABLE_HOME = "CREATE TABLE " + DbContract.TidesEntry.TABLE_TIDES_HOME + tideTablesCommon
+
 
         val SQL_CREATE_WINDS_TABLE = "CREATE TABLE " + DbContract.WindsEntry.TABLE_WINDS + " (" +
                 DbContract.WindsEntry.COLUMN_WINDS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -34,6 +37,7 @@ class TidesDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME,
                 ");"
 
         sqLiteDatabase.execSQL(SQL_CREATE_TIDES_TABLE)
+        sqLiteDatabase.execSQL(SQL_CREATE_TIDES_TABLE_HOME)
         sqLiteDatabase.execSQL(SQL_CREATE_WINDS_TABLE)
         sqLiteDatabase.execSQL(SQL_CREATE_RISE_SET_TABLE)
 
@@ -41,6 +45,7 @@ class TidesDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME,
 
     override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + DbContract.TidesEntry.TABLE_TIDES)
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + DbContract.TidesEntry.TABLE_TIDES_HOME)
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + DbContract.WindsEntry.TABLE_WINDS)
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + DbContract.RiseSetEntry.TABLE_RISE_SET)
         onCreate(sqLiteDatabase)
@@ -50,6 +55,6 @@ class TidesDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME,
 
         const val DATABASE_NAME = "weather.db"
 
-        const val DATABASE_VERSION = 8
+        const val DATABASE_VERSION = 1
     }
 }

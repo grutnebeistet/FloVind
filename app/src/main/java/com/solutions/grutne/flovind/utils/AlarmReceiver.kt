@@ -16,9 +16,11 @@ import android.support.v4.app.TaskStackBuilder
 import android.support.v4.content.ContextCompat
 import com.solutions.grutne.flovind.MainActivity
 import com.solutions.grutne.flovind.R
+import com.solutions.grutne.flovind.utils.NotificationUtils.ACTION_ALARM_PUSH_NOTIFICATION
 
 
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by Adrian on 29/10/2017.
@@ -28,15 +30,38 @@ class AlarmReceiver : BroadcastReceiver() {
 
     @Throws(NullPointerException::class)
     override fun onReceive(context: Context, intent: Intent?) {
-        Timber.d("onReceive")
+        Timber.d("onReceive  ${intent?.action}")
 
-        val nextLowTideTime = intent?.getStringExtra("nextLowTideTime")
-        val nextLowTideLevel = intent?.getStringExtra("nextLowTideLevel")
+        when (intent?.action) {
+            ACTION_ALARM_PUSH_NOTIFICATION -> {
+                pushNotification(intent, context)
+                setupNexNotification(context)
+            }
+        }
+    }
+
+    // Due to the FireBaseJobDispatcher, there should be data in the DB
+    private fun setupNexNotification(context: Context) {
+        val enableNotification = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(context.getString(R.string.pref_enable_notifications_key), false)
+        val prefOffset = PreferenceManager.getDefaultSharedPreferences(context).getString(
+                context.getString(R.string.notify_hours_key), context.getString(R.string.notify_hours_default))
+
+        if (enableNotification) {
+            val userOffset = TimeUnit.HOURS.toMillis(prefOffset!!.toLong())
+            NotificationUtils.prepareNotification(context.applicationContext, userOffset = userOffset)
+            Timber.d("setupNexNotification")
+        }
+    }
+
+    private fun pushNotification(intent: Intent?, context: Context) {
+
+        val nextLowTideTime = intent?.getStringExtra(NotificationUtils.EXTRA_NEXT_LOW_TIDE_TIME)
+        val nextLowTideLevel = intent?.getStringExtra(NotificationUtils.EXTRA_NEXT_LOW_TIDE_LEVEL)
 //        val nextHighTideTime = intent.getStringExtra("nextHighTideTime")
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID, "My Notifications", NotificationManager.IMPORTANCE_DEFAULT)
+            val notificationChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID, NOTIFICATION_NAME, NotificationManager.IMPORTANCE_DEFAULT)
 
             // Configure the notification channel.
             notificationChannel.description = "Channel description"
@@ -50,11 +75,11 @@ class AlarmReceiver : BroadcastReceiver() {
         val notificationBuilder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
                 .setVibrate(longArrayOf(0, 100, 100, 100, 100, 100))
                 .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                .setColor(ContextCompat.getColor(context, R.color.colorAccent))
-                .setSmallIcon(R.drawable.common_google_signin_btn_icon_light)
-                .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.drawable.common_google_signin_btn_icon_light))
-                .setContentTitle("Tide alert! ")
-                .setContentText("Next low tide $nextLowTideTime. Level $nextLowTideLevel")
+                .setColor(ContextCompat.getColor(context, R.color.ocean_blue))
+                .setSmallIcon(R.drawable.ic_notification)
+//                .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher_foreground))
+                .setContentTitle("Low Tide Alert! $nextLowTideTime o'clock.")
+                .setContentText("Approaching minimum water level of $nextLowTideLevel cm.")
                 .setAutoCancel(true)
 
         val activityIntent = Intent(context, MainActivity::class.java)
@@ -79,6 +104,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TIDES_NOTIFICATION_ID = 1349
-        private const val NOTIFICATION_CHANNEL_ID = "my_notification_channel"
+        private const val NOTIFICATION_CHANNEL_ID = "flovind_notification_channel"
+        private const val NOTIFICATION_NAME = "flovind_notification"
     }
 }

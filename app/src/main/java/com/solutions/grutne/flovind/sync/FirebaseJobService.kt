@@ -23,7 +23,7 @@ class FirebaseJobService : com.firebase.jobdispatcher.JobService() {
                 val context = applicationContext
 
                 val latLng = Utils.getHomeLatLong(context)
-                FloVindSyncTask.syncData(context, latLng)
+                FloVindSyncTask.syncHomeData(context, latLng)
                 // NotificationUtils.notifyOfLowTideTest(context, " doInBG");
                 jobFinished(job, true)
                 return null

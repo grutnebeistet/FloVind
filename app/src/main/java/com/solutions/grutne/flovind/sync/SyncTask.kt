@@ -17,13 +17,25 @@ import java.io.IOException
 
 object FloVindSyncTask {
     @Synchronized
-    fun syncData(context: Context, latLng: LatLng) {
+    fun syncHomeData(context: Context, latLng: LatLng) {
+        Timber.d("syncHomeData")
         syncWindData(context, latLng)
-        syncTides(context,latLng)
+        syncHomeTides(context, latLng)
         syncRiseSet(context, latLng)
 
     }
+
+    @Synchronized
+    fun syncData(context: Context, latLng: LatLng) {
+        Timber.d("syncData")
+        syncWindData(context, latLng)
+        syncTides(context, latLng)
+        syncRiseSet(context, latLng)
+
+    }
+
     private fun syncWindData(context: Context, latLng: LatLng) {
+        Timber.d("syncWindData")
         val windsRequestUrl = NetworkUtils.buildWindsRequestUrl(latLng)
         val windsData = NetworkUtils.loadWindsXml(windsRequestUrl)
         try {
@@ -43,29 +55,50 @@ object FloVindSyncTask {
     private fun syncTides(context: Context, latLng: LatLng) {
         val resolver = context.contentResolver
         try {
-            Timber.d("SyncData")
+            Timber.d("syncTides")
             val tidesRequestUrl = NetworkUtils.buildTidesRequestUrl(context, latLng)
             val tidesData = NetworkUtils.loadTidesXml(context, tidesRequestUrl)
+            Timber.d("syncTides ${tidesData?.size}")
 
             if (null != tidesData && tidesData.isNotEmpty()) {
                 resolver.delete(
                         DbContract.TidesEntry.CONTENT_URI_TIDES, null, null)
 
                 resolver.bulkInsert(DbContract.TidesEntry.CONTENT_URI_TIDES, tidesData)
-            }
 
-            val intent = Intent("FORECAST_INSERTED")
-//            intent.putExtra("IS_HOME_LOCATION", homeLocation)
-            LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
+                val intent = Intent("FORECAST_INSERTED")
+                LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
+            }
 
         } catch (e: IOException) {
             Timber.d("failed to sync tides data")
             e.printStackTrace()
         }
-
     }
+    private fun syncHomeTides(context: Context, latLng: LatLng) {
+        val resolver = context.contentResolver
+        try {
+            Timber.d("syncHomeTides")
+            val tidesRequestUrl = NetworkUtils.buildTidesRequestUrl(context, latLng)
+            val tidesData = NetworkUtils.loadTidesXml(context, tidesRequestUrl)
+            Timber.d("syncHomeTides ${tidesData?.size}")
+            if (null != tidesData && tidesData.isNotEmpty()) {
+                resolver.delete(
+                        DbContract.TidesEntry.CONTENT_URI_TIDES_HOME, null, null)
 
+                resolver.bulkInsert(DbContract.TidesEntry.CONTENT_URI_TIDES_HOME, tidesData)
+
+                val intent = Intent("FORECAST_INSERTED")
+                LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
+            }
+
+        } catch (e: IOException) {
+            Timber.d("failed to sync tides data")
+            e.printStackTrace()
+        }
+    }
     private fun syncRiseSet(context: Context, latLng: LatLng) {
+        Timber.d("syncRiseSet")
         val resolver = context.contentResolver
         val riseSetRequestUrl = NetworkUtils.buildRiseSetRequestUrl(latLng)
         try {

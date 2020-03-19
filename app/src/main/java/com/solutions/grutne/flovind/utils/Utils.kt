@@ -31,7 +31,7 @@ object Utils {
     }
 
     /**
-     * The Geocoder is inconsistent in how it organizes various parts of an Norwegian address.
+     * The GeoCoder is inconsistent in how it organizes various parts of an Norwegian address.
      * This is an attempt to provide meaningful place names (stedsnavn), and to extract the 'tettsted' from a given location.
      *
      * Consider using http://api.sehavniva.no/ <location name="___"
@@ -40,8 +40,8 @@ object Utils {
     @Throws(IOException::class, IndexOutOfBoundsException::class, RemoteException::class)
     fun getAccuratePlaceName(context: Context, latLng: LatLng): String {
         try {
-            val geocoder = Geocoder(context, Locale.getDefault())
-            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+            val geoCoder = Geocoder(context, Locale.getDefault())
+            val addresses = geoCoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
 
             val currentAddress = addresses[0]
             var place = ""
