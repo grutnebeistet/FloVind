@@ -42,7 +42,7 @@ object NetworkUtils {
         val offset = TimeUnit.DAYS.toMillis(NUMBER_OF_DAYS_TO_QUERY.toLong())
         val tillDate = FloVindDateUtils.getPersistentDateFromMillis(System.currentTimeMillis() + offset)
 
-        val requestUrl = "http://api.sehavniva.no/tideapi.php?lat=" +
+        val requestUrl = "https://api.sehavniva.no/tideapi.php?lat=" +
                 latLng.latitude +
                 "&lon=" + //10.2795140 +
                 latLng.longitude +

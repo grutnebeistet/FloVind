@@ -6,20 +6,21 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
 import android.os.Build
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
+import android.os.PersistableBundle
 import android.preference.PreferenceManager
 import android.provider.Settings
-import android.support.v4.app.ActivityCompat
-import android.support.v7.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.appcompat.widget.Toolbar
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 
 import timber.log.Timber
-import android.support.design.widget.Snackbar
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.gms.location.*
 import com.solutions.grutne.flovind.sync.SyncUtils
 import com.solutions.grutne.flovind.utils.FloVindDateUtils
@@ -55,11 +56,10 @@ internal class MainActivity : AppCompatActivity() {
             getLastLocation()
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
-        outState!!.putParcelable(LOCATION, mLastLocation)
-        super.onSaveInstanceState(outState)
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        outState.putParcelable(LOCATION, mLastLocation)
+        super.onSaveInstanceState(outState, outPersistentState)
     }
-
     private val mLocationCallback: LocationCallback? = object : LocationCallback() {
         override fun onLocationResult(p0: LocationResult?) {
             if (p0?.lastLocation != null) {

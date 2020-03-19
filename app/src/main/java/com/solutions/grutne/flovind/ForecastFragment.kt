@@ -6,16 +6,20 @@ import android.database.Cursor
 import android.location.Location
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.support.design.widget.Snackbar
-import android.support.v4.content.LocalBroadcastManager
-import android.support.v7.widget.CardView
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.cardview.widget.CardView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.TextView
+import androidx.fragment.app.Fragment
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.CursorLoader
+import androidx.loader.content.Loader
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -41,8 +45,8 @@ import java.text.ParseException
  * Created by Adrian on 24/10/2017.
  */
 
-class ForecastFragment : android.support.v4.app.Fragment(),
-        android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor>,
+class ForecastFragment : Fragment(),
+        LoaderManager.LoaderCallbacks<Cursor>,
         GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnInfoWindowClickListener,
         GoogleMap.OnMarkerClickListener,
@@ -254,7 +258,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
     }
 
 
-    override fun onCreateLoader(i: Int, bundle: Bundle?): android.support.v4.content.Loader<Cursor>? {
+    override fun onCreateLoader(i: Int, bundle: Bundle?): Loader<Cursor> {
         Timber.d("onCr Loader $i")
         val sortOrder: String
         val selection: String
@@ -265,36 +269,35 @@ class ForecastFragment : android.support.v4.app.Fragment(),
             LOADER_ID_RISE_SET -> {
                 sortOrder = DbContract.RiseSetEntry.COLUMN_RISE_SET_TYPE + " DESC"
                 selection = DbContract.RiseSetEntry.COLUMN_RISE_SET_DATE + "=?"
-                return android.support.v4.content.CursorLoader(activity!!, DbContract.RiseSetEntry.CONTENT_URI_RISE_SET,
+                return CursorLoader(activity!!, DbContract.RiseSetEntry.CONTENT_URI_RISE_SET,
                         RISE_SET_PROJECTION, selection, selectionArgs, sortOrder)
             }
             LOADER_ID_TIDES -> {
                 sortOrder = DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL + " ASC"
                 selection = DbContract.TidesEntry.COLUMN_TIDES_DATE + "=?"
 
-                return android.support.v4.content.CursorLoader(activity!!, DbContract.TidesEntry.CONTENT_URI_TIDES,
+                return CursorLoader(activity!!, DbContract.TidesEntry.CONTENT_URI_TIDES,
                         TIDES_PROJECTION, selection, selectionArgs, sortOrder)
             }
             LOADER_ID_TIDES_HOME -> {
                 sortOrder = DbContract.TidesEntry.COLUMN_TIME_OF_LEVEL + " ASC"
                 selection = DbContract.TidesEntry.COLUMN_TIDES_DATE + "=?"
 
-                return android.support.v4.content.CursorLoader(activity!!, DbContract.TidesEntry.CONTENT_URI_TIDES_HOME,
+                return CursorLoader(activity!!, DbContract.TidesEntry.CONTENT_URI_TIDES_HOME,
                         TIDES_PROJECTION, selection, selectionArgs, sortOrder)
             }
 
-            LOADER_ID_WINDS -> {
+            else -> {
                 sortOrder = DbContract.WindsEntry.COLUMN_TIME_OF_WIND + " ASC"
                 selection = DbContract.WindsEntry.COLUMN_WINDS_DATE + "=?"
 
-                return android.support.v4.content.CursorLoader(activity!!, DbContract.WindsEntry.CONTENT_URI_WINDS,
+                return CursorLoader(activity!!, DbContract.WindsEntry.CONTENT_URI_WINDS,
                         WINDS_PROJECTION, selection, selectionArgs, sortOrder)
             }
         }
-        return null
     }
 
-    override fun onLoadFinished(loader: android.support.v4.content.Loader<Cursor>, cursor: Cursor?) {
+    override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
         mMap!!.uiSettings.isZoomControlsEnabled = mContainer.visibility != View.VISIBLE
 
         when (loader.id) {
@@ -333,7 +336,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
                 when (cursor?.count) {
 
                     0 -> {
-                        Timber.d("onLoadFinished Tides 1: count: " + cursor.count + "  tidesapterCount ${mTidesRecyclerView.adapter.itemCount}")
+                        Timber.d("onLoadFinished Tides 1: count: " + cursor.count + "  tidesapterCount ${mTidesRecyclerView.adapter?.itemCount}")
                         mErrorTextView.visibility = View.VISIBLE
                         mErrorTextView.setText(R.string.connection_error)
                         mNextDay.visibility = View.INVISIBLE
@@ -371,7 +374,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
         }
     }
 
-    override fun onLoaderReset(loader: android.support.v4.content.Loader<Cursor>) {
+    override fun onLoaderReset(loader: Loader<Cursor>) {
         mTidesAdapter!!.swapCursor(null)
         mWindsAdapter!!.swapCursor(null)
     }
@@ -397,7 +400,7 @@ class ForecastFragment : android.support.v4.app.Fragment(),
 
         val maptype = mPreferences!!.getString(getString(R.string.pref_map_type_key), getString(R.string.map_type_def_value))
 
-        mMap!!.mapType = Integer.parseInt(maptype)
+        mMap!!.mapType = Integer.parseInt(maptype!!)
         setSelectedStyle()
 
 

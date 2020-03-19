@@ -5,10 +5,10 @@ import timber.log.Timber
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.support.v7.preference.CheckBoxPreference
-import android.support.v7.preference.ListPreference
-import android.support.v7.preference.Preference
-import android.support.v7.preference.PreferenceFragmentCompat
+import androidx.preference.CheckBoxPreference
+import androidx.preference.ListPreference
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import com.solutions.grutne.flovind.utils.NotificationUtils
 import java.util.concurrent.TimeUnit
 
@@ -45,14 +45,14 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
             if (prefIndex >= 0) {
                 preference.setSummary(preference.entries[prefIndex])
                 if (key == getString(R.string.pref_map_type_key))
-                    findPreference(getString(R.string.map_pref_key)).isEnabled = value != getString(R.string.map_type_def_value)
+                    findPreference<Preference>(getString(R.string.map_pref_key))?.isEnabled = value != getString(R.string.map_type_def_value)
             }
         } else {
             // For other preferences, set the summary to the value's simple string representation.
             preference.summary = stringValue
         }
 
-        findPreference(getString(R.string.map_pref_key)).isEnabled =
+        findPreference<Preference>(getString(R.string.map_pref_key))?.isEnabled =
                 preferenceScreen.sharedPreferences.getString(getString(R.string.pref_map_type_key),
                         getString(R.string.map_type_def_value)) == getString(R.string.map_type_def_value)
 
@@ -74,7 +74,7 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
                 NotificationUtils.cancelNotification(context!!.applicationContext)
             }
         }
-        val preference = findPreference(key)
+        val preference = findPreference<Preference>(key)
         if (null != preference) {
             if (preference !is CheckBoxPreference) {
                 setPreferenceSummary(preference, sharedPreferences.getString(key, ""))

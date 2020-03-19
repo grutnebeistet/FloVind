@@ -2,7 +2,7 @@ package com.solutions.grutne.flovind.sync
 
 import android.content.Context
 import android.content.Intent
-import android.support.v4.content.LocalBroadcastManager
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.maps.model.LatLng
 import com.solutions.grutne.flovind.utils.NetworkUtils
 import com.solutions.grutne.flovind.data.DbContract
